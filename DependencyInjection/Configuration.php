@@ -38,6 +38,8 @@ class Configuration implements ConfigurationInterface
 
         $rootNode
             ->children()
+                ->scalarNode('db_driver')->cannotBeOverwritten()->defaultValue('orm')->end()
+                ->scalarNode('job_class')->defaultValue('JMSJobQueueBundle:Job')->end()
                 ->booleanNode('statistics')->defaultTrue()->end()
             ->end()
         ;

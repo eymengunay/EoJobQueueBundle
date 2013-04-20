@@ -19,13 +19,14 @@
 namespace JMS\JobQueueBundle\Event;
 
 use JMS\JobQueueBundle\Entity\Job;
+use JMS\JobQueueBundle\Model\JobInterface;
 use Symfony\Component\EventDispatcher\Event;
 
 abstract class JobEvent extends Event
 {
     private $job;
 
-    public function __construct(Job $job)
+    public function __construct(JobInterface $job)
     {
         $this->job = $job;
     }

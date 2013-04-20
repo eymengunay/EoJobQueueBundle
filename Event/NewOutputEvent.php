@@ -19,6 +19,7 @@
 namespace JMS\JobQueueBundle\Event;
 
 use JMS\JobQueueBundle\Entity\Job;
+use JMS\JobQueueBundle\Model\JobInterface;
 use JMS\JobQueueBundle\Event\JobEvent;
 
 class NewOutputEvent extends JobEvent
@@ -29,7 +30,7 @@ class NewOutputEvent extends JobEvent
     private $newOutput;
     private $type;
 
-    public function __construct(Job $job, $newOutput, $type = self::TYPE_STDOUT)
+    public function __construct(JobInterface $job, $newOutput, $type = self::TYPE_STDOUT)
     {
         parent::__construct($job);
         $this->newOutput = $newOutput;

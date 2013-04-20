@@ -19,13 +19,14 @@
 namespace JMS\JobQueueBundle\Event;
 
 use JMS\JobQueueBundle\Entity\Job;
+use JMS\JobQueueBundle\Model\JobInterface;
 use JMS\JobQueueBundle\Event\JobEvent;
 
 class StateChangeEvent extends JobEvent
 {
     private $newState;
 
-    public function __construct(Job $job, $newState)
+    public function __construct(JobInterface $job, $newState)
     {
         parent::__construct($job);
 

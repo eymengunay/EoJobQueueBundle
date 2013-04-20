@@ -26,6 +26,7 @@ use JMS\JobQueueBundle\Event\NewOutputEvent;
 use Symfony\Component\Process\ProcessBuilder;
 use Symfony\Component\Process\Process;
 use JMS\JobQueueBundle\Entity\Job;
+use JMS\JobQueueBundle\Model\JobInterface;
 use JMS\JobQueueBundle\Event\StateChangeEvent;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputInterface;
@@ -67,9 +68,11 @@ class RunCommand extends \Symfony\Bundle\FrameworkBundle\Command\ContainerAwareC
         $this->env = $input->getOption('env');
         $this->verbose = $input->getOption('verbose');
         $this->output = $output;
-        $this->registry = $this->getContainer()->get('doctrine');
+        $doctrine = $this->getContainer()->getParameter('jms_job_queue.db_driver') == 'mongodb' ? 'doctrine_mongodb' : 'doctrine';
+        $this->registry = $this->getContainer()->get($doctrine);
         $this->dispatcher = $this->getContainer()->get('event_dispatcher');
-        $this->getEntityManager()->getConnection()->getConfiguration()->setSQLLogger(null);
+        if ($this->getContainer()->getParameter('jms_job_queue.db_driver') == 'orm')
+            $this->getEntityManager()->getConnection()->getConfiguration()->setSQLLogger(null);
 
         $this->cleanUpStaleJobs();
 
@@ -176,7 +179,7 @@ class RunCommand extends \Symfony\Bundle\FrameworkBundle\Command\ContainerAwareC
         gc_collect_cycles();
     }
 
-    private function startJob(Job $job)
+    private function startJob(JobInterface $job)
     {
         $event = new StateChangeEvent($job, Job::STATE_RUNNING);
         $this->dispatcher->dispatch('jms_job_queue.job_state_change', $event);
@@ -280,13 +283,18 @@ class RunCommand extends \Symfony\Bundle\FrameworkBundle\Command\ContainerAwareC
         return $pb;
     }
 
+    private function getJobClass()
+    {
+        return $this->getContainer()->getParameter('jms_job_queue.job_class');
+    }
+
     private function getEntityManager()
     {
-        return $this->registry->getManagerForClass('JMSJobQueueBundle:Job');
+        return $this->registry->getManagerForClass($this->getJobClass());
     }
 
     private function getRepository()
     {
-        return $this->getEntityManager()->getRepository('JMSJobQueueBundle:Job');
+        return $this->getEntityManager()->getRepository($this->getJobClass());
     }
 }

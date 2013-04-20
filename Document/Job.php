@@ -16,23 +16,20 @@
  * limitations under the License.
  */
 
-namespace JMS\JobQueueBundle\Entity;
+namespace JMS\JobQueueBundle\Document;
 
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\Mapping as ORM;
+use Doctrine\ODM\MongoDB\Mapping\Annotations as ODM;
 use JMS\JobQueueBundle\Exception\InvalidStateTransitionException;
 use JMS\JobQueueBundle\Exception\LogicException;
 use JMS\JobQueueBundle\Model\JobInterface;
 use Symfony\Component\HttpKernel\Exception\FlattenException;
 
 /**
- * @ORM\Entity(repositoryClass = "JMS\JobQueueBundle\Entity\Repository\JobRepository")
- * @ORM\Table(name = "jms_jobs", indexes = {
- *     @ORM\Index(columns = {"command"}),
- * })
- * @ORM\ChangeTrackingPolicy("DEFERRED_EXPLICIT")
+ * @ODM\Document(repositoryClass = "JMS\JobQueueBundle\Document\Repository\JobRepository", collection="jms_jobs")
+ * @ODM\ChangeTrackingPolicy("DEFERRED_EXPLICIT")
  *
- * @author Johannes M. Schmitt <schmittjoh@gmail.com>
+ * @author Eymen Gunay <eymen@egunay.com>
  */
 class Job implements JobInterface
 {
@@ -75,82 +72,78 @@ class Job implements JobInterface
      */
     const STATE_INCOMPLETE = 'incomplete';
 
-    /** @ORM\Id @ORM\GeneratedValue(strategy = "AUTO") @ORM\Column(type = "bigint", options = {"unsigned": true}) */
+    /** @ODM\Id(strategy="auto") */
     private $id;
 
-    /** @ORM\Column(type = "string") */
+    /** @ODM\Field(type="string") */
     private $state;
 
-    /** @ORM\Column(type = "datetime") */
+    /** @ODM\Field(type="date") */
     private $createdAt;
 
-    /** @ORM\Column(type = "datetime", nullable = true) */
+    /** @ODM\Field(type="date", nullable = true) */
     private $startedAt;
 
-    /** @ORM\Column(type = "datetime", nullable = true) */
+    /** @ODM\Field(type="date", nullable = true) */
     private $checkedAt;
 
-    /** @ORM\Column(type = "datetime", nullable = true) */
+    /** @ODM\Field(type="date", nullable = true) */
     private $executeAfter;
 
-    /** @ORM\Column(type = "datetime", nullable = true) */
+    /** @ODM\Field(type="date", nullable = true) */
     private $closedAt;
 
-    /** @ORM\Column(type = "string") */
+    /** @ODM\Field(type="string") */
     private $command;
 
-    /** @ORM\Column(type = "json_array") */
+    /** @ODM\Field(type="hash") */
     private $args;
 
     /**
-     * @ORM\ManyToMany(targetEntity = "Job", fetch = "EAGER")
-     * @ORM\JoinTable(name="jms_job_dependencies",
-     *     joinColumns = { @ORM\JoinColumn(name = "source_job_id", referencedColumnName = "id") },
-     *     inverseJoinColumns = { @ORM\JoinColumn(name = "dest_job_id", referencedColumnName = "id")}
-     * )
+     * @ODM\ReferenceMany(targetDocument = "Job")
      */
     private $dependencies;
 
-    /** @ORM\Column(type = "text", nullable = true) */
+    /** @ODM\Field(type="string") */
     private $output;
 
-    /** @ORM\Column(type = "text", nullable = true) */
+    /** @ODM\Field(type="string") */
     private $errorOutput;
 
-    /** @ORM\Column(type = "smallint", nullable = true, options = {"unsigned": true}) */
+    /** @ODM\Field(type="int") */
     private $exitCode;
 
-    /** @ORM\Column(type = "smallint", options = {"unsigned": true}) */
+    /** @ODM\Field(type="int") */
     private $maxRuntime = 0;
 
-    /** @ORM\Column(type = "smallint", options = {"unsigned": true}) */
+    /** @ODM\Field(type="int") */
     private $maxRetries = 0;
 
-    /** @ORM\ManyToOne(targetEntity = "Job", inversedBy = "retryJobs") */
+    /** @ODM\ReferenceOne(targetDocument = "Job", inversedBy = "retryJobs") */
     private $originalJob;
 
-    /** @ORM\OneToMany(targetEntity = "Job", mappedBy = "originalJob", cascade = {"persist", "remove", "detach"}) */
+    /** @ODM\ReferenceMany(targetDocument = "Job", mappedBy = "originalJob", cascade = {"persist", "remove", "detach"}) */
     private $retryJobs;
 
-    /** @ORM\Column(type = "object", nullable = true) */
+    /** @ODM\Field(type = "hash") */
     private $stackTrace;
 
-    /** @ORM\Column(type = "smallint", nullable = true, options = {"unsigned": true}) */
+    /** @ODM\Field(type="int") */
     private $runtime;
 
-    /** @ORM\Column(type = "integer", nullable = true, options = {"unsigned": true}) */
+    /** @ODM\Field(type="int") */
     private $memoryUsage;
 
-    /** @ORM\Column(type = "integer", nullable = true, options = {"unsigned": true}) */
+    /** @ODM\Field(type="int") */
     private $memoryUsageReal;
 
     /**
-     * This may store any entities which are related to this job, and are
+     * This may store any documents which are related to this job, and are
      * managed by Doctrine.
      *
      * It is effectively a many-to-any association.
      */
-    private $relatedEntities;
+    private $relatedDocuments;
 
     public static function create($command, array $args = array(), $confirmed = true)
     {
@@ -172,7 +165,7 @@ class Job implements JobInterface
         $this->executeAfter = $this->executeAfter->modify('-1 second');
         $this->dependencies = new ArrayCollection();
         $this->retryJobs = new ArrayCollection();
-        $this->relatedEntities = new ArrayCollection();
+        $this->relatedDocuments = new ArrayCollection();
     }
 
     public function __clone()
@@ -296,9 +289,9 @@ class Job implements JobInterface
         return $this->args;
     }
 
-    public function getRelatedEntities()
+    public function getRelatedDocuments()
     {
-        return $this->relatedEntities;
+        return $this->relatedDocuments;
     }
 
     public function isClosedNonSuccessful()
@@ -306,26 +299,26 @@ class Job implements JobInterface
         return self::isNonSuccessfulFinalState($this->state);
     }
 
-    public function findRelatedEntity($class)
+    public function findRelatedDocument($class)
     {
-        foreach ($this->relatedEntities as $entity) {
-            if ($entity instanceof $class) {
-                return $entity;
+        foreach ($this->relatedDocuments as $document) {
+            if ($document instanceof $class) {
+                return $document;
             }
         }
 
         return null;
     }
 
-    public function addRelatedEntity($entity)
+    public function addRelatedDocument($document)
     {
-        assert('is_object($entity)');
+        assert('is_object($document)');
 
-        if ($this->relatedEntities->contains($entity)) {
+        if ($this->relatedDocuments->contains($document)) {
             return;
         }
 
-        $this->relatedEntities->add($entity);
+        $this->relatedDocuments->add($document);
     }
 
     public function getDependencies()
