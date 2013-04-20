@@ -71,8 +71,9 @@ class RunCommand extends \Symfony\Bundle\FrameworkBundle\Command\ContainerAwareC
         $doctrine = $this->getContainer()->getParameter('jms_job_queue.db_driver') == 'mongodb' ? 'doctrine_mongodb' : 'doctrine';
         $this->registry = $this->getContainer()->get($doctrine);
         $this->dispatcher = $this->getContainer()->get('event_dispatcher');
-        if ($this->getContainer()->getParameter('jms_job_queue.db_driver') == 'orm')
+        if ($this->getContainer()->getParameter('jms_job_queue.db_driver') == 'orm') {
             $this->getEntityManager()->getConnection()->getConfiguration()->setSQLLogger(null);
+        }
 
         $this->cleanUpStaleJobs();
 

@@ -189,24 +189,20 @@ class JobRepository extends DocumentRepository
 
     public function closeJob(JobInterface $job, $finalState)
     {
-        try {
-            $visited = array();
-            $this->closeJobInternal($job, $finalState, $visited);
-            $this->dm->flush();
+        $visited = array();
+        $this->closeJobInternal($job, $finalState, $visited);
 
-            // Clean-up entity manager to allow for garbage collection to kick in.
-            foreach ($visited as $job) {
-                // If the job is an original job which is now being retried, let's
-                // not remove it just yet.
-                if ( ! $job->isClosedNonSuccessful() || $job->isRetryJob()) {
-                    continue;
-                }
-
-                $this->dm->detach($job);
+        // Clean-up entity manager to allow for garbage collection to kick in.
+        foreach ($visited as $job) {
+            // If the job is an original job which is now being retried, let's
+            // not remove it just yet.
+            if ( ! $job->isClosedNonSuccessful() || $job->isRetryJob()) {
+                continue;
             }
-        } catch (\Exception $ex) {
-            throw $ex;
+
+            $this->dm->detach($job);
         }
+        $this->dm->flush($job);
     }
 
     private function closeJobInternal(JobInterface $job, $finalState, array &$visited = array())
@@ -258,7 +254,6 @@ class JobRepository extends DocumentRepository
                     $job->addRetryJob($retryJob);
                     $this->dm->persist($retryJob);
                     $this->dm->persist($job);
-
                     return;
                 }
 
@@ -277,9 +272,9 @@ class JobRepository extends DocumentRepository
                     $job->getOriginalJob()->setState($finalState);
                     $this->dm->persist($job->getOriginalJob());
                 }
+
                 $job->setState($finalState);
                 $this->dm->persist($job);
-
                 return;
 
             default:
