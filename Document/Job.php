@@ -22,6 +22,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ODM\MongoDB\Mapping\Annotations as ODM;
 use JMS\JobQueueBundle\Exception\InvalidStateTransitionException;
 use JMS\JobQueueBundle\Exception\LogicException;
+use JMS\JobQueueBundle\Model\Job as BaseJob;
 use JMS\JobQueueBundle\Model\JobInterface;
 use Symfony\Component\HttpKernel\Exception\FlattenException;
 
@@ -31,7 +32,7 @@ use Symfony\Component\HttpKernel\Exception\FlattenException;
  *
  * @author Eymen Gunay <eymen@egunay.com>
  */
-class Job implements JobInterface
+class Job extends BaseJob implements JobInterface
 {
     /** State if job is inserted, but not yet ready to be started. */
     const STATE_NEW = 'new';
@@ -76,7 +77,7 @@ class Job implements JobInterface
     private $id;
 
     /** @ODM\Field(type="string") */
-    private $state;
+    protected $state;
 
     /** @ODM\Field(type="date") */
     private $createdAt;
@@ -89,6 +90,12 @@ class Job implements JobInterface
 
     /** @ODM\Field(type="date", nullable = true) */
     private $executeAfter;
+
+    /** @ODM\Field(type="int") */
+    private $interval;
+
+    /** @ODM\Field(type="date", nullable = true) */
+    private $expiresAt;
 
     /** @ODM\Field(type="date", nullable = true) */
     private $closedAt;
@@ -205,60 +212,6 @@ class Job implements JobInterface
         return true;
     }
 
-    public function setState($newState)
-    {
-        if ($newState === $this->state) {
-            return;
-        }
-
-        switch ($this->state) {
-            case self::STATE_NEW:
-                if ( ! in_array($newState, array(self::STATE_PENDING, self::STATE_CANCELED), true)) {
-                    throw new InvalidStateTransitionException($this, $newState, array(self::STATE_PENDING, self::STATE_CANCELED));
-                }
-
-                if (self::STATE_CANCELED === $newState) {
-                    $this->closedAt = new \DateTime();
-                }
-
-                break;
-
-            case self::STATE_PENDING:
-                if ( ! in_array($newState, array(self::STATE_RUNNING, self::STATE_CANCELED), true)) {
-                    throw new InvalidStateTransitionException($this, $newState, array(self::STATE_RUNNING, self::STATE_CANCELED));
-                }
-
-                if ($newState === self::STATE_RUNNING) {
-                    $this->startedAt = new \DateTime();
-                    $this->checkedAt = new \DateTime();
-                } else if ($newState === self::STATE_CANCELED) {
-                    $this->closedAt = new \DateTime();
-                }
-
-                break;
-
-            case self::STATE_RUNNING:
-                if ( ! in_array($newState, array(self::STATE_FINISHED, self::STATE_FAILED, self::STATE_TERMINATED, self::STATE_INCOMPLETE))) {
-                    throw new InvalidStateTransitionException($this, $newState, array(self::STATE_FINISHED, self::STATE_FAILED, self::STATE_TERMINATED, self::STATE_INCOMPLETE));
-                }
-
-                $this->closedAt = new \DateTime();
-
-                break;
-
-            case self::STATE_FINISHED:
-            case self::STATE_FAILED:
-            case self::STATE_TERMINATED:
-            case self::STATE_INCOMPLETE:
-                throw new InvalidStateTransitionException($this, $newState);
-
-            default:
-                throw new LogicException('The previous cases were exhaustive. Unknown state: '.$this->state);
-        }
-
-        $this->state = $newState;
-    }
-
     public function getCreatedAt()
     {
         return $this->createdAt;
@@ -277,6 +230,27 @@ class Job implements JobInterface
     public function setExecuteAfter(\DateTime $executeAfter)
     {
         $this->executeAfter = $executeAfter;
+    }
+
+    public function getInterval()
+    {
+        return $this->interval;
+    }
+
+    public function setInterval($interval)
+    {
+        $this->interval = $interval;
+        return $this;
+    }
+
+    public function getExpiresAt()
+    {
+        return $this->expiresAt;
+    }
+
+    public function setExpiresAt(\DateTime $expiresAt)
+    {
+        $this->expiresAt = $expiresAt;
     }
 
     public function getCommand()
