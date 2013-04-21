@@ -29,6 +29,7 @@ use JMS\JobQueueBundle\Event\StateChangeEvent;
 use Symfony\Bridge\Doctrine\RegistryInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use DateTime;
+use DateInterval;
 
 class JobRepository extends DocumentRepository
 {
@@ -202,7 +203,6 @@ class JobRepository extends DocumentRepository
 
             $this->dm->detach($job);
         }
-        $this->dm->flush($job);
     }
 
     private function closeJobInternal(JobInterface $job, $finalState, array &$visited = array())
@@ -222,6 +222,7 @@ class JobRepository extends DocumentRepository
             case Job::STATE_CANCELED:
                 $job->setState(Job::STATE_CANCELED);
                 $this->dm->persist($job);
+                $this->dm->flush();
 
                 if ($job->isRetryJob()) {
                     $this->closeJobInternal($job->getOriginalJob(), Job::STATE_CANCELED, $visited);
@@ -241,6 +242,7 @@ class JobRepository extends DocumentRepository
                 if ($job->isRetryJob()) {
                     $job->setState($finalState);
                     $this->dm->persist($job);
+                    $this->dm->flush();
 
                     $this->closeJobInternal($job->getOriginalJob(), $finalState);
 
@@ -254,11 +256,13 @@ class JobRepository extends DocumentRepository
                     $job->addRetryJob($retryJob);
                     $this->dm->persist($retryJob);
                     $this->dm->persist($job);
+                    $this->dm->flush();
                     return;
                 }
 
                 $job->setState($finalState);
                 $this->dm->persist($job);
+                $this->dm->flush();
 
                 // The original job has failed, and no retries are allowed.
                 foreach ($this->findIncomingDependencies($job) as $dep) {
@@ -270,11 +274,19 @@ class JobRepository extends DocumentRepository
             case Job::STATE_FINISHED:
                 if ($job->isRetryJob()) {
                     $job->getOriginalJob()->setState($finalState);
-                    $this->dm->persist($job->getOriginalJob());
+                    $this->getDocumentManager()->persist($job->getOriginalJob());
                 }
 
                 $job->setState($finalState);
                 $this->dm->persist($job);
+                $this->dm->flush();
+
+                if (!is_null($job->getInterval())) {
+                    $newJob = clone $job;
+                    $newJob->setExecuteAfter(new DateTime("+" . $job->getInterval() . " seconds"));
+                    $this->dm->persist($newJob);
+                    $this->dm->flush();
+                }
                 return;
 
             default:
