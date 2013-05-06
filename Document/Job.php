@@ -74,75 +74,75 @@ class Job extends BaseJob implements JobInterface
     const STATE_INCOMPLETE = 'incomplete';
 
     /** @ODM\Id(strategy="auto") */
-    private $id;
+    protected $id;
 
     /** @ODM\Field(type="string") */
     protected $state;
 
     /** @ODM\Field(type="date") */
-    private $createdAt;
+    protected $createdAt;
 
     /** @ODM\Field(type="date", nullable = true) */
-    private $startedAt;
+    protected $startedAt;
 
     /** @ODM\Field(type="date", nullable = true) */
-    private $checkedAt;
+    protected $checkedAt;
 
     /** @ODM\Field(type="date", nullable = true) */
-    private $executeAfter;
+    protected $executeAfter;
 
     /** @ODM\Field(type="int") */
-    private $interval;
+    protected $interval;
 
     /** @ODM\Field(type="date", nullable = true) */
-    private $expiresAt;
+    protected $expiresAt;
 
     /** @ODM\Field(type="date", nullable = true) */
-    private $closedAt;
+    protected $closedAt;
 
     /** @ODM\Field(type="string") */
-    private $command;
+    protected $command;
 
     /** @ODM\Field(type="hash") */
-    private $args;
+    protected $args;
 
     /**
      * @ODM\ReferenceMany(targetDocument = "Job")
      */
-    private $dependencies;
+    protected $dependencies;
 
     /** @ODM\Field(type="string") */
-    private $output;
+    protected $output;
 
     /** @ODM\Field(type="string") */
-    private $errorOutput;
+    protected $errorOutput;
 
     /** @ODM\Field(type="int") */
-    private $exitCode;
+    protected $exitCode;
 
     /** @ODM\Field(type="int") */
-    private $maxRuntime = 0;
+    protected $maxRuntime = 0;
 
     /** @ODM\Field(type="int") */
-    private $maxRetries = 0;
+    protected $maxRetries = 0;
 
     /** @ODM\ReferenceOne(targetDocument = "Job", inversedBy = "retryJobs") */
-    private $originalJob;
+    protected $originalJob;
 
     /** @ODM\ReferenceMany(targetDocument = "Job", mappedBy = "originalJob", cascade = {"persist", "remove", "detach"}) */
-    private $retryJobs;
+    protected $retryJobs;
 
     /** @ODM\Field(type = "hash") */
-    private $stackTrace;
+    protected $stackTrace;
 
     /** @ODM\Field(type="int") */
-    private $runtime;
+    protected $runtime;
 
     /** @ODM\Field(type="int") */
-    private $memoryUsage;
+    protected $memoryUsage;
 
     /** @ODM\Field(type="int") */
-    private $memoryUsageReal;
+    protected $memoryUsageReal;
 
     /**
      * This may store any documents which are related to this job, and are
@@ -150,7 +150,7 @@ class Job extends BaseJob implements JobInterface
      *
      * It is effectively a many-to-any association.
      */
-    private $relatedDocuments;
+    protected $relatedDocuments;
 
     public static function create($command, array $args = array(), $confirmed = true)
     {
@@ -521,7 +521,7 @@ class Job extends BaseJob implements JobInterface
         return sprintf('Job(id = %s, command = "%s")', $this->id, $this->command);
     }
 
-    private function mightHaveStarted()
+    protected function mightHaveStarted()
     {
         if (null === $this->id) {
             return false;

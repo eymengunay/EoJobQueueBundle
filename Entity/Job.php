@@ -77,31 +77,31 @@ class Job extends BaseJob implements JobInterface
     const STATE_INCOMPLETE = 'incomplete';
 
     /** @ORM\Id @ORM\GeneratedValue(strategy = "AUTO") @ORM\Column(type = "bigint", options = {"unsigned": true}) */
-    private $id;
+    protected $id;
 
     /** @ORM\Column(type = "string") */
     protected $state;
 
     /** @ORM\Column(type = "datetime") */
-    private $createdAt;
+    protected $createdAt;
 
     /** @ORM\Column(type = "datetime", nullable = true) */
-    private $startedAt;
+    protected $startedAt;
 
     /** @ORM\Column(type = "datetime", nullable = true) */
-    private $checkedAt;
+    protected $checkedAt;
 
     /** @ORM\Column(type = "datetime", nullable = true) */
-    private $executeAfter;
+    protected $executeAfter;
 
     /** @ORM\Column(type = "datetime", nullable = true) */
-    private $closedAt;
+    protected $closedAt;
 
     /** @ORM\Column(type = "string") */
-    private $command;
+    protected $command;
 
     /** @ORM\Column(type = "json_array") */
-    private $args;
+    protected $args;
 
     /**
      * @ORM\ManyToMany(targetEntity = "Job", fetch = "EAGER")
@@ -110,40 +110,40 @@ class Job extends BaseJob implements JobInterface
      *     inverseJoinColumns = { @ORM\JoinColumn(name = "dest_job_id", referencedColumnName = "id")}
      * )
      */
-    private $dependencies;
+    protected $dependencies;
 
     /** @ORM\Column(type = "text", nullable = true) */
-    private $output;
+    protected $output;
 
     /** @ORM\Column(type = "text", nullable = true) */
-    private $errorOutput;
+    protected $errorOutput;
 
     /** @ORM\Column(type = "smallint", nullable = true, options = {"unsigned": true}) */
-    private $exitCode;
+    protected $exitCode;
 
     /** @ORM\Column(type = "smallint", options = {"unsigned": true}) */
-    private $maxRuntime = 0;
+    protected $maxRuntime = 0;
 
     /** @ORM\Column(type = "smallint", options = {"unsigned": true}) */
-    private $maxRetries = 0;
+    protected $maxRetries = 0;
 
     /** @ORM\ManyToOne(targetEntity = "Job", inversedBy = "retryJobs") */
-    private $originalJob;
+    protected $originalJob;
 
     /** @ORM\OneToMany(targetEntity = "Job", mappedBy = "originalJob", cascade = {"persist", "remove", "detach"}) */
-    private $retryJobs;
+    protected $retryJobs;
 
     /** @ORM\Column(type = "object", nullable = true) */
-    private $stackTrace;
+    protected $stackTrace;
 
     /** @ORM\Column(type = "smallint", nullable = true, options = {"unsigned": true}) */
-    private $runtime;
+    protected $runtime;
 
     /** @ORM\Column(type = "integer", nullable = true, options = {"unsigned": true}) */
-    private $memoryUsage;
+    protected $memoryUsage;
 
     /** @ORM\Column(type = "integer", nullable = true, options = {"unsigned": true}) */
-    private $memoryUsageReal;
+    protected $memoryUsageReal;
 
     /**
      * This may store any entities which are related to this job, and are
@@ -151,7 +151,7 @@ class Job extends BaseJob implements JobInterface
      *
      * It is effectively a many-to-any association.
      */
-    private $relatedEntities;
+    protected $relatedEntities;
 
     public static function create($command, array $args = array(), $confirmed = true)
     {
@@ -501,7 +501,7 @@ class Job extends BaseJob implements JobInterface
         return sprintf('Job(id = %s, command = "%s")', $this->id, $this->command);
     }
 
-    private function mightHaveStarted()
+    protected function mightHaveStarted()
     {
         if (null === $this->id) {
             return false;
