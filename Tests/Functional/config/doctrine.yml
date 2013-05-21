@@ -8,7 +8,7 @@ doctrine:
         entity_managers:
             jobs:
                 mappings:
-                    JMSJobQueueBundle:
+                    EoJobQueueBundle:
                         is_bundle: true
                         type: annotation
 

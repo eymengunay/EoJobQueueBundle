@@ -1,8 +1,8 @@
 <?php
 
-namespace JMS\JobQueueBundle\Tests\Functional;
+namespace Eo\JobQueueBundle\Tests\Functional;
 
-use JMS\JobQueueBundle\Entity\Job;
+use Eo\JobQueueBundle\Entity\Job;
 use Symfony\Component\Console\Output\Output;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
@@ -43,7 +43,7 @@ class RunCommandTest extends BaseTestCase
 
     public function testSuccessfulCommand()
     {
-        $job = new Job('jms-job-queue:successful-cmd');
+        $job = new Job('eo-job-queue:successful-cmd');
         $this->em->persist($job);
         $this->em->flush($job);
 
@@ -56,7 +56,7 @@ class RunCommandTest extends BaseTestCase
      */
     public function testRetry()
     {
-        $job = new Job('jms-job-queue:sometimes-failing-cmd', array(time()));
+        $job = new Job('eo-job-queue:sometimes-failing-cmd', array(time()));
         $job->setMaxRetries(5);
         $this->em->persist($job);
         $this->em->flush($job);
@@ -75,7 +75,7 @@ class RunCommandTest extends BaseTestCase
     {
         $this->markTestSkipped('Requires a patched Process class (see symfony/symfony#5030).');
 
-        $job = new Job('jms-job-queue:never-ending');
+        $job = new Job('eo-job-queue:never-ending');
         $job->setMaxRuntime(1);
         $this->em->persist($job);
         $this->em->flush($job);
@@ -89,7 +89,7 @@ class RunCommandTest extends BaseTestCase
      */
     public function testExceptionStackTraceIsSaved()
     {
-        $job = new Job('jms-job-queue:throws-exception-cmd');
+        $job = new Job('eo-job-queue:throws-exception-cmd');
         $this->em->persist($job);
         $this->em->flush($job);
 
@@ -118,12 +118,12 @@ class RunCommandTest extends BaseTestCase
         $this->app->setAutoExit(false);
         $this->app->setCatchExceptions(false);
 
-        $this->em = self::$kernel->getContainer()->get('doctrine')->getManagerForClass('JMSJobQueueBundle:Job');
+        $this->em = self::$kernel->getContainer()->get('doctrine')->getManagerForClass('EoJobQueueBundle:Job');
     }
 
     private function doRun(array $args = array())
     {
-        array_unshift($args, 'jms-job-queue:run');
+        array_unshift($args, 'eo-job-queue:run');
         $output = new MemoryOutput();
         $this->app->run(new ArrayInput($args), $output);
 

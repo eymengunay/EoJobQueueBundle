@@ -16,16 +16,16 @@
  * limitations under the License.
  */
 
-namespace JMS\JobQueueBundle\Document\Repository;
+namespace Eo\JobQueueBundle\Document\Repository;
 
 use Doctrine\Common\Util\ClassUtils;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\ODM\MongoDB\DocumentRepository;
 use Doctrine\ORM\Query\ResultSetMappingBuilder;
 use JMS\DiExtraBundle\Annotation as DI;
-use JMS\JobQueueBundle\Entity\Job;
-use JMS\JobQueueBundle\Model\JobInterface;
-use JMS\JobQueueBundle\Event\StateChangeEvent;
+use Eo\JobQueueBundle\Entity\Job;
+use Eo\JobQueueBundle\Model\JobInterface;
+use Eo\JobQueueBundle\Event\StateChangeEvent;
 use Symfony\Bridge\Doctrine\RegistryInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use DateTime;
@@ -87,7 +87,7 @@ class JobRepository extends DocumentRepository
         $this->dm->persist($job);
         $this->dm->flush($job);
 
-        $firstJob = $this->dm->createQuery("SELECT j FROM JMSJobQueueBundle:Job j WHERE j.command = :command AND j.args = :args ORDER BY j.id ASC")
+        $firstJob = $this->dm->createQuery("SELECT j FROM EoJobQueueBundle:Job j WHERE j.command = :command AND j.args = :args ORDER BY j.id ASC")
              ->setParameter('command', $command)
              ->setParameter('args', $args, 'json_array')
              ->setMaxResults(1)
@@ -130,9 +130,9 @@ class JobRepository extends DocumentRepository
         list($relClass, $relId) = $this->getRelatedDocumentIdentifier($relatedDocument);
 
         $rsm = new ResultSetMappingBuilder($this->dm);
-        $rsm->addRootDocumentFromClassMetadata('JMSJobQueueBundle:Job', 'j');
+        $rsm->addRootDocumentFromClassMetadata('EoJobQueueBundle:Job', 'j');
 
-        return $this->dm->createNativeQuery("SELECT j.* FROM jms_jobs j INNER JOIN jms_job_related_entities r ON r.job_id = j.id WHERE r.related_class = :relClass AND r.related_id = :relId", $rsm)
+        return $this->dm->createNativeQuery("SELECT j.* FROM eo_jobs j INNER JOIN eo_job_related_entities r ON r.job_id = j.id WHERE r.related_class = :relClass AND r.related_id = :relId", $rsm)
                     ->setParameter('relClass', $relClass)
                     ->setParameter('relId', $relId)
                     ->getResult();
@@ -143,9 +143,9 @@ class JobRepository extends DocumentRepository
         list($relClass, $relId) = $this->getRelatedDocumentIdentifier($relatedDocument);
 
         $rsm = new ResultSetMappingBuilder($this->dm);
-        $rsm->addRootDocumentFromClassMetadata('JMSJobQueueBundle:Job', 'j');
+        $rsm->addRootDocumentFromClassMetadata('EoJobQueueBundle:Job', 'j');
 
-        return $this->dm->createNativeQuery("SELECT j.* FROM jms_jobs j INNER JOIN jms_job_related_entities r ON r.job_id = j.id WHERE r.related_class = :relClass AND r.related_id = :relId AND j.command = :command", $rsm)
+        return $this->dm->createNativeQuery("SELECT j.* FROM eo_jobs j INNER JOIN eo_job_related_entities r ON r.job_id = j.id WHERE r.related_class = :relClass AND r.related_id = :relId AND j.command = :command", $rsm)
                    ->setParameter('command', $command)
                    ->setParameter('relClass', $relClass)
                    ->setParameter('relId', $relId)
@@ -214,7 +214,7 @@ class JobRepository extends DocumentRepository
 
         if (null !== $this->dispatcher && ($job->isRetryJob() || 0 === count($job->getRetryJobs()))) {
             $event = new StateChangeEvent($job, $finalState);
-            $this->dispatcher->dispatch('jms_job_queue.job_state_change', $event);
+            $this->dispatcher->dispatch('eo_job_queue.job_state_change', $event);
             $finalState = $event->getNewState();
         }
 

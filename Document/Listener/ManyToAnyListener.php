@@ -1,6 +1,6 @@
 <?php
 
-namespace JMS\JobQueueBundle\Document\Listener;
+namespace Eo\JobQueueBundle\Document\Listener;
 
 /**
  * Provides many-to-any association support for jobs.
@@ -20,14 +20,14 @@ class ManyToAnyListener
     public function __construct(\Symfony\Bridge\Doctrine\RegistryInterface $registry)
     {
         $this->registry = $registry;
-        $this->ref = new \ReflectionProperty('JMS\JobQueueBundle\Document\Job', 'relatedDocuments');
+        $this->ref = new \ReflectionProperty('Eo\JobQueueBundle\Document\Job', 'relatedDocuments');
         $this->ref->setAccessible(true);
     }
 
     public function postLoad(\Doctrine\Common\EventArgs\LifecycleEventArgs $event)
     {
         $entity = $event->getDocument();
-        if ( ! $entity instanceof \JMS\JobQueueBundle\Document\Job) {
+        if ( ! $entity instanceof \Eo\JobQueueBundle\Document\Job) {
             return;
         }
 
@@ -37,7 +37,7 @@ class ManyToAnyListener
     public function postPersist(\Doctrine\Common\EventArgs\LifecycleEventArgs $event)
     {
         $entity = $event->getEntity();
-        if ( ! $entity instanceof \JMS\JobQueueBundle\Document\Job) {
+        if ( ! $entity instanceof \Eo\JobQueueBundle\Document\Job) {
             return;
         }
 
@@ -51,7 +51,7 @@ class ManyToAnyListener
                 throw new \RuntimeException('The identifier for the related entity "'.$relClass.'" was empty.');
             }
 
-            $con->executeUpdate("INSERT INTO jms_job_related_entities (job_id, related_class, related_id) VALUES (:jobId, :relClass, :relId)", array(
+            $con->executeUpdate("INSERT INTO eo_job_related_entities (job_id, related_class, related_id) VALUES (:jobId, :relClass, :relId)", array(
                 'jobId' => $entity->getId(),
                 'relClass' => $relClass,
                 'relId' => json_encode($relId),

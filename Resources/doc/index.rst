@@ -1,4 +1,4 @@
-JMSJobQueueBundle
+EoJobQueueBundle
 =================
 
 Overview

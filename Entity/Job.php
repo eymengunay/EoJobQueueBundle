@@ -16,19 +16,19 @@
  * limitations under the License.
  */
 
-namespace JMS\JobQueueBundle\Entity;
+namespace Eo\JobQueueBundle\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
-use JMS\JobQueueBundle\Exception\InvalidStateTransitionException;
-use JMS\JobQueueBundle\Exception\LogicException;
-use JMS\JobQueueBundle\Model\Job as BaseJob;
-use JMS\JobQueueBundle\Model\JobInterface;
+use Eo\JobQueueBundle\Exception\InvalidStateTransitionException;
+use Eo\JobQueueBundle\Exception\LogicException;
+use Eo\JobQueueBundle\Model\Job as BaseJob;
+use Eo\JobQueueBundle\Model\JobInterface;
 use Symfony\Component\HttpKernel\Exception\FlattenException;
 
 /**
- * @ORM\Entity(repositoryClass = "JMS\JobQueueBundle\Entity\Repository\JobRepository")
- * @ORM\Table(name = "jms_jobs", indexes = {
+ * @ORM\Entity(repositoryClass = "Eo\JobQueueBundle\Entity\Repository\JobRepository")
+ * @ORM\Table(name = "eo_jobs", indexes = {
  *     @ORM\Index(columns = {"command"}),
  * })
  * @ORM\ChangeTrackingPolicy("DEFERRED_EXPLICIT")
@@ -105,7 +105,7 @@ class Job extends BaseJob implements JobInterface
 
     /**
      * @ORM\ManyToMany(targetEntity = "Job", fetch = "EAGER")
-     * @ORM\JoinTable(name="jms_job_dependencies",
+     * @ORM\JoinTable(name="eo_job_dependencies",
      *     joinColumns = { @ORM\JoinColumn(name = "source_job_id", referencedColumnName = "id") },
      *     inverseJoinColumns = { @ORM\JoinColumn(name = "dest_job_id", referencedColumnName = "id")}
      * )

@@ -1,6 +1,6 @@
 <?php
 
-namespace JMS\JobQueueBundle\Document\Listener;
+namespace Eo\JobQueueBundle\Document\Listener;
 
 use ArrayIterator;
 use Closure;
@@ -9,7 +9,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Collections\Expr\ClosureExpressionVisitor;
 use Doctrine\Common\Collections\Selectable;
-use JMS\JobQueueBundle\Entity\Job;
+use Eo\JobQueueBundle\Entity\Job;
 use Symfony\Bridge\Doctrine\RegistryInterface;
 use Symfony\Component\Validator\Constraints\Collection as Collection2;
 
@@ -514,10 +514,10 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
             return;
         }
 
-        $con = $this->registry->getManagerForClass('JMSJobQueueBundle:Job')->getConnection();
+        $con = $this->registry->getManagerForClass('EoJobQueueBundle:Job')->getConnection();
         $entitiesPerClass = array();
         $count = 0;
-        foreach ($con->query("SELECT related_class, related_id FROM jms_job_related_entities WHERE job_id = ".$this->job->getId()) as $data) {
+        foreach ($con->query("SELECT related_class, related_id FROM eo_job_related_entities WHERE job_id = ".$this->job->getId()) as $data) {
             $count += 1;
             $entitiesPerClass[$data['related_class']][] = json_decode($data['related_id'], true);
         }

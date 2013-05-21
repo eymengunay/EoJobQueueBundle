@@ -1,11 +1,11 @@
-{% extends "JMSJobQueueBundle::base.html.twig" %}
-{% import "JMSJobQueueBundle:Job:macros.html.twig" as macros %}
+{% extends "EoJobQueueBundle::base.html.twig" %}
+{% import "EoJobQueueBundle:Job:macros.html.twig" as macros %}
 
 {% block title %}Job "{{ job.command }}" (ID: {{ job.id }})" - {{ parent() }}{% endblock %}
 
 {% block content %}
 <ul class="breadcrumb">
-    <li><a href="{{ path("jms_jobs_overview") }}">Jobs</a> <span class="divider">/</span></li>
+    <li><a href="{{ path("eo_jobs_overview") }}">Jobs</a> <span class="divider">/</span></li>
     <li class="active">Job "{{ job.command }}"</li>
 </ul>
 
@@ -29,7 +29,7 @@
     {% if job.isRetryJob() %}
     <tr>
         <th>Original Job</th>
-        <td><a href="{{ path("jms_jobs_details", {"id": job.originalJob.id}) }}">#{{ job.originalJob.id }}</a> {{ macros.state(job.originalJob) }}</td>
+        <td><a href="{{ path("eo_jobs_details", {"id": job.originalJob.id}) }}">#{{ job.originalJob.id }}</a> {{ macros.state(job.originalJob) }}</td>
     </tr>
     {% endif %}
     {% if relatedEntities|length > 0 %}
@@ -37,8 +37,8 @@
         <th>Related Entities</th>
         <td>
             {%- for entity in relatedEntities %}
-                {%- if entity.raw is jms_job_queue_linkable -%}
-                    <a href="{{ jms_job_queue_path(entity.raw) }}">{{ entity.raw|jms_job_queue_linkname }}</a>
+                {%- if entity.raw is eo_job_queue_linkable -%}
+                    <a href="{{ eo_job_queue_path(entity.raw) }}">{{ entity.raw|eo_job_queue_linkname }}</a>
                 {%- else -%}
                     {{ entity.class }} ({{ entity.id }})
                 {%- endif -%}
@@ -52,7 +52,7 @@
         <th>Dependencies</th>
         <td>
             {%- for dep in job.dependencies -%}
-                <a href="{{ path("jms_jobs_details", {"id": dep.id}) }}" title="{{ dep.command }}{% for arg in dep.args %} {{ arg }}{% endfor %} (ID {{ dep.id }})">{{ dep.command }}</a> {{ macros.state(dep) }}
+                <a href="{{ path("eo_jobs_details", {"id": dep.id}) }}" title="{{ dep.command }}{% for arg in dep.args %} {{ arg }}{% endfor %} (ID {{ dep.id }})">{{ dep.command }}</a> {{ macros.state(dep) }}
                 {%- if not loop.last %}, {% endif -%}
             {%- endfor -%}
     </tr>
@@ -62,7 +62,7 @@
         <th>Incoming Dependencies</th>
         <td>
             {%- for dep in incomingDependencies -%}
-                <a href="{{ path("jms_jobs_details", {"id": dep.id}) }}" title="{{ dep.command }}{% for arg in dep.args %} {{ arg }}{% endfor %} (ID {{ dep.id }})">{{ dep.command }}</a> {{ macros.state(dep) }}
+                <a href="{{ path("eo_jobs_details", {"id": dep.id}) }}" title="{{ dep.command }}{% for arg in dep.args %} {{ arg }}{% endfor %} (ID {{ dep.id }})">{{ dep.command }}</a> {{ macros.state(dep) }}
             {%- endfor -%}
         </td>
     </tr>
@@ -84,7 +84,7 @@
     <tbody>
         {% for retryJob in job.retryJobs %}
         <tr>
-            <td><a href="{{ path("jms_jobs_details", {"id": retryJob.id}) }}">{{ retryJob.id }}</a></td>
+            <td><a href="{{ path("eo_jobs_details", {"id": retryJob.id}) }}">{{ retryJob.id }}</a></td>
             <td>{{ macros.ago(retryJob.createdAt) }}</td>
             <td>{{ macros.state(retryJob) }}</td>
         </tr>
@@ -128,7 +128,7 @@
 <h3>Error Output</h3>
 <pre style="max-height:300px; overflow:auto;">{{ job.errorOutput }}</pre>
 <div class="alert alert-warn">
-    <a href="{{ path("jms_jobs_retry_job", {"id": job.id}) }}" class="pull-right btn btn-danger">
+    <a href="{{ path("eo_jobs_retry_job", {"id": job.id}) }}" class="pull-right btn btn-danger">
         <i class="icon-repeat icon-white"></i>
         Retry Job
     </a>

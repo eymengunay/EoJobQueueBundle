@@ -1,6 +1,6 @@
 <?php
 
-namespace JMS\JobQueueBundle\Tests\Functional;
+namespace Eo\JobQueueBundle\Tests\Functional;
 
 // Set-up composer auto-loading if Client is insulated.
 call_user_func(function() {
@@ -45,8 +45,8 @@ class AppKernel extends Kernel
             new \JMS\AopBundle\JMSAopBundle(),
             new \JMS\DiExtraBundle\JMSDiExtraBundle($this),
 
-            new \JMS\JobQueueBundle\Tests\Functional\TestBundle\TestBundle(),
-            new \JMS\JobQueueBundle\JMSJobQueueBundle(),
+            new \Eo\JobQueueBundle\Tests\Functional\TestBundle\TestBundle(),
+            new \Eo\JobQueueBundle\EoJobQueueBundle(),
         );
     }
 
@@ -57,7 +57,7 @@ class AppKernel extends Kernel
 
     public function getCacheDir()
     {
-        return sys_get_temp_dir().'/'.Kernel::VERSION.'/JMSJobQueueBundle/'.substr(sha1($this->config), 0, 6).'/cache';
+        return sys_get_temp_dir().'/'.Kernel::VERSION.'/EoJobQueueBundle/'.substr(sha1($this->config), 0, 6).'/cache';
     }
 
     public function getContainerClass()
@@ -67,7 +67,7 @@ class AppKernel extends Kernel
 
     public function getLogDir()
     {
-        return sys_get_temp_dir().'/'.Kernel::VERSION.'/JMSJobQueueBundle/'.substr(sha1($this->config), 0, 6).'/logs';
+        return sys_get_temp_dir().'/'.Kernel::VERSION.'/EoJobQueueBundle/'.substr(sha1($this->config), 0, 6).'/logs';
     }
 
     public function serialize()

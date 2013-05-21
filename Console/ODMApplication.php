@@ -1,12 +1,12 @@
 <?php
 
-namespace JMS\JobQueueBundle\Console;
+namespace Eo\JobQueueBundle\Console;
 
 declare(ticks = 10000000);
 
 use Doctrine\DBAL\Types\Type;
 
-use JMS\JobQueueBundle\Document\JobStatistic;
+use Eo\JobQueueBundle\Document\JobStatistic;
 use Symfony\Bundle\FrameworkBundle\Console\Application as BaseApplication;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -29,12 +29,12 @@ class ODMApplication extends BaseApplication
     {
         parent::__construct($kernel);
 
-        $this->getDefinition()->addOption(new InputOption('--jms-job-id', null, InputOption::VALUE_REQUIRED, 'The ID of the Job.'));
+        $this->getDefinition()->addOption(new InputOption('--eo-job-id', null, InputOption::VALUE_REQUIRED, 'The ID of the Job.'));
 
         $kernel->boot();
 
         $this->dm = $this->getDocumentManager();
-        if ($kernel->getContainer()->getParameter('jms_job_queue.statistics')) {
+        if ($kernel->getContainer()->getParameter('eo_job_queue.statistics')) {
             register_tick_function(array($this, 'onTick'));
         }
     }
@@ -57,7 +57,7 @@ class ODMApplication extends BaseApplication
 
     public function onTick()
     {
-        if ( ! $this->input->hasOption('jms-job-id') || null === $jobId = $this->input->getOption('jms-job-id')) {
+        if ( ! $this->input->hasOption('eo-job-id') || null === $jobId = $this->input->getOption('eo-job-id')) {
             return;
         }
 
@@ -80,11 +80,11 @@ class ODMApplication extends BaseApplication
 
     private function saveDebugInformation(\Exception $ex = null)
     {
-        if ( ! $this->input->hasOption('jms-job-id') || null === $jobId = $this->input->getOption('jms-job-id')) {
+        if ( ! $this->input->hasOption('eo-job-id') || null === $jobId = $this->input->getOption('eo-job-id')) {
             return;
         }
 
-        $this->getConnection()->executeUpdate("UPDATE jms_jobs SET stackTrace = :trace, memoryUsage = :memoryUsage, memoryUsageReal = :memoryUsageReal WHERE id = :id", array(
+        $this->getConnection()->executeUpdate("UPDATE eo_jobs SET stackTrace = :trace, memoryUsage = :memoryUsage, memoryUsageReal = :memoryUsageReal WHERE id = :id", array(
             'id' => $jobId,
             'memoryUsage' => memory_get_peak_usage(),
             'memoryUsageReal' => memory_get_peak_usage(true),

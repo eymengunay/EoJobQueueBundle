@@ -5,12 +5,12 @@
     xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
 
     <parameters>
-        <parameter key="jms_job_queue.twig.extension.class">JMS\JobQueueBundle\Twig\JobQueueExtension</parameter>
-        <parameter key="jms_job_queue.job_controller.class">JMS\JobQueueBundle\Controller\JobController</parameter>
+        <parameter key="eo_job_queue.twig.extension.class">Eo\JobQueueBundle\Twig\JobQueueExtension</parameter>
+        <parameter key="eo_job_queue.job_controller.class">Eo\JobQueueBundle\Controller\JobController</parameter>
     </parameters>
 
     <services>
-        <service id="jms_job_queue.twig.extension" class="%jms_job_queue.twig.extension.class%">
+        <service id="eo_job_queue.twig.extension" class="%eo_job_queue.twig.extension.class%">
             <tag name="twig.extension" />
         </service>
     </services>

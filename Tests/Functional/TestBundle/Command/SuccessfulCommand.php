@@ -1,6 +1,6 @@
 <?php
 
-namespace JMS\JobQueueBundle\Tests\Functional\TestBundle\Command;
+namespace Eo\JobQueueBundle\Tests\Functional\TestBundle\Command;
 
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputInterface;
@@ -10,7 +10,7 @@ class SuccessfulCommand extends \Symfony\Bundle\FrameworkBundle\Command\Containe
     protected function configure()
     {
         $this
-            ->setName('jms-job-queue:successful-cmd')
+            ->setName('eo-job-queue:successful-cmd')
         ;
     }
 

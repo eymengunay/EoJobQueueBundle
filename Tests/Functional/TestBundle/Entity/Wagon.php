@@ -1,6 +1,6 @@
 <?php
 
-namespace JMS\JobQueueBundle\Tests\Functional\TestBundle\Entity;
+namespace Eo\JobQueueBundle\Tests\Functional\TestBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 

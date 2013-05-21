@@ -16,18 +16,18 @@
  * limitations under the License.
  */
 
-namespace JMS\JobQueueBundle\Command;
+namespace Eo\JobQueueBundle\Command;
 
 use Symfony\Component\Process\Exception\ProcessFailedException;
 
-use JMS\JobQueueBundle\Exception\LogicException;
-use JMS\JobQueueBundle\Exception\InvalidArgumentException;
-use JMS\JobQueueBundle\Event\NewOutputEvent;
+use Eo\JobQueueBundle\Exception\LogicException;
+use Eo\JobQueueBundle\Exception\InvalidArgumentException;
+use Eo\JobQueueBundle\Event\NewOutputEvent;
 use Symfony\Component\Process\ProcessBuilder;
 use Symfony\Component\Process\Process;
-use JMS\JobQueueBundle\Entity\Job;
-use JMS\JobQueueBundle\Model\JobInterface;
-use JMS\JobQueueBundle\Event\StateChangeEvent;
+use Eo\JobQueueBundle\Entity\Job;
+use Eo\JobQueueBundle\Model\JobInterface;
+use Eo\JobQueueBundle\Event\StateChangeEvent;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -44,7 +44,7 @@ class RunCommand extends \Symfony\Bundle\FrameworkBundle\Command\ContainerAwareC
     protected function configure()
     {
         $this
-            ->setName('jms-job-queue:run')
+            ->setName('eo-job-queue:run')
             ->setDescription('Runs jobs from the queue.')
             ->addOption('max-runtime', 'r', InputOption::VALUE_REQUIRED, 'The maximum runtime in seconds.', 900)
             ->addOption('max-concurrent-jobs', 'j', InputOption::VALUE_REQUIRED, 'The maximum number of concurrent jobs.', 5)
@@ -68,10 +68,10 @@ class RunCommand extends \Symfony\Bundle\FrameworkBundle\Command\ContainerAwareC
         $this->env = $input->getOption('env');
         $this->verbose = $input->getOption('verbose');
         $this->output = $output;
-        $doctrine = $this->getContainer()->getParameter('jms_job_queue.db_driver') == 'mongodb' ? 'doctrine_mongodb' : 'doctrine';
+        $doctrine = $this->getContainer()->getParameter('eo_job_queue.db_driver') == 'mongodb' ? 'doctrine_mongodb' : 'doctrine';
         $this->registry = $this->getContainer()->get($doctrine);
         $this->dispatcher = $this->getContainer()->get('event_dispatcher');
-        if ($this->getContainer()->getParameter('jms_job_queue.db_driver') == 'orm') {
+        if ($this->getContainer()->getParameter('eo_job_queue.db_driver') == 'orm') {
             $this->getEntityManager()->getConnection()->getConfiguration()->setSQLLogger(null);
         }
 
@@ -116,13 +116,13 @@ class RunCommand extends \Symfony\Bundle\FrameworkBundle\Command\ContainerAwareC
 
             if ( ! empty($newOutput)) {
                 $event = new NewOutputEvent($data['job'], $newOutput, NewOutputEvent::TYPE_STDOUT);
-                $this->dispatcher->dispatch('jms_job_queue.new_job_output', $event);
+                $this->dispatcher->dispatch('eo_job_queue.new_job_output', $event);
                 $newOutput = $event->getNewOutput();
             }
 
             if ( ! empty($newErrorOutput)) {
                 $event = new NewOutputEvent($data['job'], $newErrorOutput, NewOutputEvent::TYPE_STDERR);
-                $this->dispatcher->dispatch('jms_job_queue.new_job_output', $event);
+                $this->dispatcher->dispatch('eo_job_queue.new_job_output', $event);
                 $newErrorOutput = $event->getNewOutput();
             }
 
@@ -183,7 +183,7 @@ class RunCommand extends \Symfony\Bundle\FrameworkBundle\Command\ContainerAwareC
     private function startJob(JobInterface $job)
     {
         $event = new StateChangeEvent($job, Job::STATE_RUNNING);
-        $this->dispatcher->dispatch('jms_job_queue.job_state_change', $event);
+        $this->dispatcher->dispatch('eo_job_queue.job_state_change', $event);
         $newState = $event->getNewState();
 
         if (Job::STATE_CANCELED === $newState) {
@@ -204,7 +204,7 @@ class RunCommand extends \Symfony\Bundle\FrameworkBundle\Command\ContainerAwareC
         $pb = $this->getCommandProcessBuilder();
         $pb
             ->add($job->getCommand())
-            ->add('--jms-job-id='.$job->getId())
+            ->add('--eo-job-id='.$job->getId())
         ;
 
         foreach ($job->getArgs() as $arg) {
@@ -245,7 +245,7 @@ class RunCommand extends \Symfony\Bundle\FrameworkBundle\Command\ContainerAwareC
 
             $pb = $this->getCommandProcessBuilder();
             $pb
-                ->add('jms-job-queue:mark-incomplete')
+                ->add('eo-job-queue:mark-incomplete')
                 ->add($job->getId())
                 ->add('--env='.$this->env)
                 ->add('--verbose')
@@ -286,7 +286,7 @@ class RunCommand extends \Symfony\Bundle\FrameworkBundle\Command\ContainerAwareC
 
     private function getJobClass()
     {
-        return $this->getContainer()->getParameter('jms_job_queue.job_class');
+        return $this->getContainer()->getParameter('eo_job_queue.job_class');
     }
 
     private function getEntityManager()

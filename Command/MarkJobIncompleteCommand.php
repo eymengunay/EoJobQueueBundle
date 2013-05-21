@@ -1,8 +1,8 @@
 <?php
 
-namespace JMS\JobQueueBundle\Command;
+namespace Eo\JobQueueBundle\Command;
 
-use JMS\JobQueueBundle\Entity\Job;
+use Eo\JobQueueBundle\Entity\Job;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputArgument;
@@ -13,7 +13,7 @@ class MarkJobIncompleteCommand extends ContainerAwareCommand
     protected function configure()
     {
         $this
-            ->setName('jms-job-queue:mark-incomplete')
+            ->setName('eo-job-queue:mark-incomplete')
             ->setDescription('Internal command (do not use). It marks jobs as incomplete.')
             ->addArgument('job-id', InputArgument::REQUIRED, 'The ID of the Job.')
         ;
@@ -23,7 +23,7 @@ class MarkJobIncompleteCommand extends ContainerAwareCommand
     {
         $c = $this->getContainer();
 
-        $doctrine = $this->getContainer()->getParameter('jms_job_queue.db_driver') == 'mongodb' ? 'doctrine_mongodb' : 'doctrine';
+        $doctrine = $this->getContainer()->getParameter('eo_job_queue.db_driver') == 'mongodb' ? 'doctrine_mongodb' : 'doctrine';
         $em = $c->get($doctrine)->getManagerForClass($this->getJobClass());
         $repo = $em->getRepository($this->getJobClass());
 
@@ -32,6 +32,6 @@ class MarkJobIncompleteCommand extends ContainerAwareCommand
 
     private function getJobClass()
     {
-        return $this->getContainer()->getParameter('jms_job_queue.job_class');
+        return $this->getContainer()->getParameter('eo_job_queue.job_class');
     }
 }

@@ -16,11 +16,11 @@
  * limitations under the License.
  */
 
-namespace JMS\JobQueueBundle\Event;
+namespace Eo\JobQueueBundle\Event;
 
-use JMS\JobQueueBundle\Entity\Job;
-use JMS\JobQueueBundle\Model\JobInterface;
-use JMS\JobQueueBundle\Event\JobEvent;
+use Eo\JobQueueBundle\Entity\Job;
+use Eo\JobQueueBundle\Model\JobInterface;
+use Eo\JobQueueBundle\Event\JobEvent;
 
 class StateChangeEvent extends JobEvent
 {

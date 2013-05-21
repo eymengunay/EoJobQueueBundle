@@ -1,6 +1,6 @@
 <?php
 
-namespace JMS\JobQueueBundle\Entity\Listener;
+namespace Eo\JobQueueBundle\Entity\Listener;
 
 /**
  * Provides many-to-any association support for jobs.
@@ -20,14 +20,14 @@ class ManyToAnyListener
     public function __construct(\Symfony\Bridge\Doctrine\RegistryInterface $registry)
     {
         $this->registry = $registry;
-        $this->ref = new \ReflectionProperty('JMS\JobQueueBundle\Entity\Job', 'relatedEntities');
+        $this->ref = new \ReflectionProperty('Eo\JobQueueBundle\Entity\Job', 'relatedEntities');
         $this->ref->setAccessible(true);
     }
 
     public function postLoad(\Doctrine\ORM\Event\LifecycleEventArgs $event)
     {
         $entity = $event->getEntity();
-        if ( ! $entity instanceof \JMS\JobQueueBundle\Entity\Job) {
+        if ( ! $entity instanceof \Eo\JobQueueBundle\Entity\Job) {
             return;
         }
 
@@ -37,7 +37,7 @@ class ManyToAnyListener
     public function postPersist(\Doctrine\ORM\Event\LifecycleEventArgs $event)
     {
         $entity = $event->getEntity();
-        if ( ! $entity instanceof \JMS\JobQueueBundle\Entity\Job) {
+        if ( ! $entity instanceof \Eo\JobQueueBundle\Entity\Job) {
             return;
         }
 
@@ -51,7 +51,7 @@ class ManyToAnyListener
                 throw new \RuntimeException('The identifier for the related entity "'.$relClass.'" was empty.');
             }
 
-            $con->executeUpdate("INSERT INTO jms_job_related_entities (job_id, related_class, related_id) VALUES (:jobId, :relClass, :relId)", array(
+            $con->executeUpdate("INSERT INTO eo_job_related_entities (job_id, related_class, related_id) VALUES (:jobId, :relClass, :relId)", array(
                 'jobId' => $entity->getId(),
                 'relClass' => $relClass,
                 'relId' => json_encode($relId),
@@ -64,15 +64,15 @@ class ManyToAnyListener
         $schema = $event->getSchema();
 
         // When using multiple entity managers ignore events that are triggered by other entity managers.
-        if ($event->getEntityManager()->getMetadataFactory()->isTransient('JMS\JobQueueBundle\Entity\Job')) {
+        if ($event->getEntityManager()->getMetadataFactory()->isTransient('Eo\JobQueueBundle\Entity\Job')) {
             return;
         }
 
-        $table = $schema->createTable('jms_job_related_entities');
+        $table = $schema->createTable('eo_job_related_entities');
         $table->addColumn('job_id', 'bigint', array('nullable' => false, 'unsigned' => true));
         $table->addColumn('related_class', 'string', array('nullable' => false, 'length' => '150'));
         $table->addColumn('related_id', 'string', array('nullable' => false, 'length' => '100'));
         $table->setPrimaryKey(array('job_id', 'related_class', 'related_id'));
-        $table->addForeignKeyConstraint('jms_jobs', array('job_id'), array('id'));
+        $table->addForeignKeyConstraint('eo_jobs', array('job_id'), array('id'));
     }
 }

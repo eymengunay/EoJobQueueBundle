@@ -1,6 +1,6 @@
 <?php
 
-namespace JMS\JobQueueBundle\Twig;
+namespace Eo\JobQueueBundle\Twig;
 
 class JobQueueExtension extends \Twig_Extension
 {
@@ -14,22 +14,22 @@ class JobQueueExtension extends \Twig_Extension
     public function getTests()
     {
         return array(
-            'jms_job_queue_linkable' => new \Twig_Test_Method($this, 'isLinkable'),
+            'eo_job_queue_linkable' => new \Twig_Test_Method($this, 'isLinkable'),
         );
     }
 
     public function getFunctions()
     {
         return array(
-            'jms_job_queue_path' => new \Twig_Function_Method($this, 'generatePath', array('is_safe' => array('html' => true))),
+            'eo_job_queue_path' => new \Twig_Function_Method($this, 'generatePath', array('is_safe' => array('html' => true))),
         );
     }
 
     public function getFilters()
     {
         return array(
-            'jms_job_queue_linkname' => new \Twig_Filter_Method($this, 'getLinkname'),
-            'jms_job_queue_args' => new \Twig_Filter_Method($this, 'formatArgs'),
+            'eo_job_queue_linkname' => new \Twig_Filter_Method($this, 'getLinkname'),
+            'eo_job_queue_args' => new \Twig_Filter_Method($this, 'formatArgs'),
         );
     }
 
@@ -91,6 +91,6 @@ class JobQueueExtension extends \Twig_Extension
 
     public function getName()
     {
-        return 'jms_job_queue';
+        return 'eo_job_queue';
     }
 }

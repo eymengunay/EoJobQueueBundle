@@ -1,16 +1,16 @@
 <?php
 
-namespace JMS\JobQueueBundle\Tests\Functional;
+namespace Eo\JobQueueBundle\Tests\Functional;
 
-use JMS\JobQueueBundle\Tests\Functional\TestBundle\Entity\Train;
+use Eo\JobQueueBundle\Tests\Functional\TestBundle\Entity\Train;
 
-use JMS\JobQueueBundle\Tests\Functional\TestBundle\Entity\Wagon;
+use Eo\JobQueueBundle\Tests\Functional\TestBundle\Entity\Wagon;
 
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Doctrine\ORM\EntityManager;
-use JMS\JobQueueBundle\Entity\Repository\JobRepository;
-use JMS\JobQueueBundle\Event\StateChangeEvent;
-use JMS\JobQueueBundle\Entity\Job;
+use Eo\JobQueueBundle\Entity\Repository\JobRepository;
+use Eo\JobQueueBundle\Event\StateChangeEvent;
+use Eo\JobQueueBundle\Entity\Job;
 
 class JobRepositoryTest extends BaseTestCase
 {
@@ -139,10 +139,10 @@ class JobRepositoryTest extends BaseTestCase
 
         $this->dispatcher->expects($this->at(0))
             ->method('dispatch')
-            ->with('jms_job_queue.job_state_change', new StateChangeEvent($a, 'terminated'));
+            ->with('eo_job_queue.job_state_change', new StateChangeEvent($a, 'terminated'));
         $this->dispatcher->expects($this->at(1))
             ->method('dispatch')
-            ->with('jms_job_queue.job_state_change', new StateChangeEvent($b, 'canceled'));
+            ->with('eo_job_queue.job_state_change', new StateChangeEvent($b, 'canceled'));
 
         $this->assertEquals('running', $a->getState());
         $this->assertEquals('pending', $b->getState());
@@ -164,11 +164,11 @@ class JobRepositoryTest extends BaseTestCase
 
         $this->dispatcher->expects($this->at(0))
             ->method('dispatch')
-            ->with('jms_job_queue.job_state_change', new StateChangeEvent($a, 'canceled'));
+            ->with('eo_job_queue.job_state_change', new StateChangeEvent($a, 'canceled'));
 
         $this->dispatcher->expects($this->at(1))
             ->method('dispatch')
-            ->with('jms_job_queue.job_state_change', new StateChangeEvent($b, 'canceled'));
+            ->with('eo_job_queue.job_state_change', new StateChangeEvent($b, 'canceled'));
 
         $this->repo->closeJob($a, 'canceled');
         $this->assertEquals('canceled', $a->getState());
@@ -187,13 +187,13 @@ class JobRepositoryTest extends BaseTestCase
 
         $this->dispatcher->expects($this->at(0))
             ->method('dispatch')
-            ->with('jms_job_queue.job_state_change', new StateChangeEvent($a, 'failed'));
+            ->with('eo_job_queue.job_state_change', new StateChangeEvent($a, 'failed'));
         $this->dispatcher->expects($this->at(1))
             ->method('dispatch')
-            ->with('jms_job_queue.job_state_change', new \PHPUnit_Framework_Constraint_Not($this->equalTo(new StateChangeEvent($a, 'failed'))));
+            ->with('eo_job_queue.job_state_change', new \PHPUnit_Framework_Constraint_Not($this->equalTo(new StateChangeEvent($a, 'failed'))));
         $this->dispatcher->expects($this->at(2))
             ->method('dispatch')
-            ->with('jms_job_queue.job_state_change', new \PHPUnit_Framework_Constraint_Not($this->equalTo(new StateChangeEvent($a, 'failed'))));
+            ->with('eo_job_queue.job_state_change', new \PHPUnit_Framework_Constraint_Not($this->equalTo(new StateChangeEvent($a, 'failed'))));
 
         $this->assertCount(0, $a->getRetryJobs());
         $this->repo->closeJob($a, 'failed');
@@ -213,7 +213,7 @@ class JobRepositoryTest extends BaseTestCase
         $this->assertEquals('terminated', $a->getState());
 
         $this->em->clear();
-        $reloadedA = $this->em->find('JMSJobQueueBundle:Job', $a->getId());
+        $reloadedA = $this->em->find('EoJobQueueBundle:Job', $a->getId());
         $this->assertCount(2, $reloadedA->getRetryJobs());
     }
 
@@ -237,9 +237,9 @@ class JobRepositoryTest extends BaseTestCase
         $this->em->clear();
         $this->assertNotSame($defEm, $this->em);
 
-        $reloadedJ = $this->em->find('JMSJobQueueBundle:Job', $j->getId());
+        $reloadedJ = $this->em->find('EoJobQueueBundle:Job', $j->getId());
 
-        $reloadedWagon = $reloadedJ->findRelatedEntity('JMS\JobQueueBundle\Tests\Functional\TestBundle\Entity\Wagon');
+        $reloadedWagon = $reloadedJ->findRelatedEntity('Eo\JobQueueBundle\Tests\Functional\TestBundle\Entity\Wagon');
         $reloadedWagon->state = 'broken';
         $defEm->persist($reloadedWagon);
         $defEm->flush();
@@ -253,8 +253,8 @@ class JobRepositoryTest extends BaseTestCase
         $this->importDatabaseSchema();
 
         $this->dispatcher = $this->getMock('Symfony\Component\EventDispatcher\EventDispatcherInterface');
-        $this->em = self::$kernel->getContainer()->get('doctrine')->getManagerForClass('JMSJobQueueBundle:Job');
-        $this->repo = $this->em->getRepository('JMSJobQueueBundle:Job');
+        $this->em = self::$kernel->getContainer()->get('doctrine')->getManagerForClass('EoJobQueueBundle:Job');
+        $this->repo = $this->em->getRepository('EoJobQueueBundle:Job');
         $this->repo->setDispatcher($this->dispatcher);
     }
 }

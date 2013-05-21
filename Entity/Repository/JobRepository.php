@@ -16,15 +16,15 @@
  * limitations under the License.
  */
 
-namespace JMS\JobQueueBundle\Entity\Repository;
+namespace Eo\JobQueueBundle\Entity\Repository;
 
 use Doctrine\Common\Util\ClassUtils;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Query\ResultSetMappingBuilder;
 use JMS\DiExtraBundle\Annotation as DI;
-use JMS\JobQueueBundle\Entity\Job;
-use JMS\JobQueueBundle\Event\StateChangeEvent;
+use Eo\JobQueueBundle\Entity\Job;
+use Eo\JobQueueBundle\Event\StateChangeEvent;
 use Symfony\Bridge\Doctrine\RegistryInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use DateTime;
@@ -58,7 +58,7 @@ class JobRepository extends EntityRepository
 
     public function findJob($command, array $args = array())
     {
-        return $this->_em->createQuery("SELECT j FROM JMSJobQueueBundle:Job j WHERE j.command = :command AND j.args = :args")
+        return $this->_em->createQuery("SELECT j FROM EoJobQueueBundle:Job j WHERE j.command = :command AND j.args = :args")
             ->setParameter('command', $command)
             ->setParameter('args', $args, Type::JSON_ARRAY)
             ->setMaxResults(1)
@@ -84,7 +84,7 @@ class JobRepository extends EntityRepository
         $this->_em->persist($job);
         $this->_em->flush($job);
 
-        $firstJob = $this->_em->createQuery("SELECT j FROM JMSJobQueueBundle:Job j WHERE j.command = :command AND j.args = :args ORDER BY j.id ASC")
+        $firstJob = $this->_em->createQuery("SELECT j FROM EoJobQueueBundle:Job j WHERE j.command = :command AND j.args = :args ORDER BY j.id ASC")
              ->setParameter('command', $command)
              ->setParameter('args', $args, 'json_array')
              ->setMaxResults(1)
@@ -127,9 +127,9 @@ class JobRepository extends EntityRepository
         list($relClass, $relId) = $this->getRelatedEntityIdentifier($relatedEntity);
 
         $rsm = new ResultSetMappingBuilder($this->_em);
-        $rsm->addRootEntityFromClassMetadata('JMSJobQueueBundle:Job', 'j');
+        $rsm->addRootEntityFromClassMetadata('EoJobQueueBundle:Job', 'j');
 
-        return $this->_em->createNativeQuery("SELECT j.* FROM jms_jobs j INNER JOIN jms_job_related_entities r ON r.job_id = j.id WHERE r.related_class = :relClass AND r.related_id = :relId", $rsm)
+        return $this->_em->createNativeQuery("SELECT j.* FROM eo_jobs j INNER JOIN eo_job_related_entities r ON r.job_id = j.id WHERE r.related_class = :relClass AND r.related_id = :relId", $rsm)
                     ->setParameter('relClass', $relClass)
                     ->setParameter('relId', $relId)
                     ->getResult();
@@ -140,9 +140,9 @@ class JobRepository extends EntityRepository
         list($relClass, $relId) = $this->getRelatedEntityIdentifier($relatedEntity);
 
         $rsm = new ResultSetMappingBuilder($this->_em);
-        $rsm->addRootEntityFromClassMetadata('JMSJobQueueBundle:Job', 'j');
+        $rsm->addRootEntityFromClassMetadata('EoJobQueueBundle:Job', 'j');
 
-        return $this->_em->createNativeQuery("SELECT j.* FROM jms_jobs j INNER JOIN jms_job_related_entities r ON r.job_id = j.id WHERE r.related_class = :relClass AND r.related_id = :relId AND j.command = :command", $rsm)
+        return $this->_em->createNativeQuery("SELECT j.* FROM eo_jobs j INNER JOIN eo_job_related_entities r ON r.job_id = j.id WHERE r.related_class = :relClass AND r.related_id = :relId AND j.command = :command", $rsm)
                    ->setParameter('command', $command)
                    ->setParameter('relClass', $relClass)
                    ->setParameter('relId', $relId)
@@ -175,7 +175,7 @@ class JobRepository extends EntityRepository
             $excludedIds = array(-1);
         }
 
-        return $this->_em->createQuery("SELECT j FROM JMSJobQueueBundle:Job j LEFT JOIN j.dependencies d WHERE j.executeAfter < :now AND j.state = :state AND j.id NOT IN (:excludedIds) ORDER BY j.id ASC")
+        return $this->_em->createQuery("SELECT j FROM EoJobQueueBundle:Job j LEFT JOIN j.dependencies d WHERE j.executeAfter < :now AND j.state = :state AND j.id NOT IN (:excludedIds) ORDER BY j.id ASC")
                     ->setParameter('state', Job::STATE_PENDING)
                     ->setParameter('excludedIds', $excludedIds)
                     ->setParameter('now', new DateTime())
@@ -218,7 +218,7 @@ class JobRepository extends EntityRepository
 
         if (null !== $this->dispatcher && ($job->isRetryJob() || 0 === count($job->getRetryJobs()))) {
             $event = new StateChangeEvent($job, $finalState);
-            $this->dispatcher->dispatch('jms_job_queue.job_state_change', $event);
+            $this->dispatcher->dispatch('eo_job_queue.job_state_change', $event);
             $finalState = $event->getNewState();
         }
 
@@ -289,21 +289,21 @@ class JobRepository extends EntityRepository
 
     public function findIncomingDependencies(Job $job)
     {
-        return $this->_em->createQuery("SELECT j FROM JMSJobQueueBundle:Job j LEFT JOIN j.dependencies d WHERE :job MEMBER OF j.dependencies")
+        return $this->_em->createQuery("SELECT j FROM EoJobQueueBundle:Job j LEFT JOIN j.dependencies d WHERE :job MEMBER OF j.dependencies")
                     ->setParameter('job', $job)
                     ->getResult();
     }
 
     public function getIncomingDependencies(Job $job)
     {
-        return $this->_em->createQuery("SELECT j FROM JMSJobQueueBundle:Job j WHERE :job MEMBER OF j.dependencies")
+        return $this->_em->createQuery("SELECT j FROM EoJobQueueBundle:Job j WHERE :job MEMBER OF j.dependencies")
                     ->setParameter('job', $job)
                     ->getResult();
     }
 
     public function findLastJobsWithError($nbJobs = 10)
     {
-        return $this->_em->createQuery("SELECT j FROM JMSJobQueueBundle:Job j WHERE j.state IN (:errorStates) AND j.originalJob IS NULL ORDER BY j.closedAt DESC")
+        return $this->_em->createQuery("SELECT j FROM EoJobQueueBundle:Job j WHERE j.state IN (:errorStates) AND j.originalJob IS NULL ORDER BY j.closedAt DESC")
                     ->setParameter('errorStates', array(Job::STATE_TERMINATED, Job::STATE_FAILED))
                     ->setMaxResults($nbJobs)
                     ->getResult();

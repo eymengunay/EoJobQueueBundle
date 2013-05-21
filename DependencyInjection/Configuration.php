@@ -16,13 +16,13 @@
  * limitations under the License.
  */
 
-namespace JMS\JobQueueBundle\DependencyInjection;
+namespace Eo\JobQueueBundle\DependencyInjection;
 
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 
 /**
- * JMSJobQueueBundle Configuration.
+ * EoJobQueueBundle Configuration.
  *
  * @author Johannes M. Schmitt <schmittjoh@gmail.com>
  */
@@ -34,12 +34,12 @@ class Configuration implements ConfigurationInterface
     public function getConfigTreeBuilder()
     {
         $treeBuilder = new TreeBuilder();
-        $rootNode = $treeBuilder->root('jms_job_queue');
+        $rootNode = $treeBuilder->root('eo_job_queue');
 
         $rootNode
             ->children()
                 ->scalarNode('db_driver')->cannotBeOverwritten()->defaultValue('orm')->end()
-                ->scalarNode('job_class')->defaultValue('JMSJobQueueBundle:Job')->end()
+                ->scalarNode('job_class')->defaultValue('EoJobQueueBundle:Job')->end()
                 ->booleanNode('statistics')->defaultTrue()->end()
             ->end()
         ;

@@ -16,9 +16,9 @@
  * limitations under the License.
  */
 
-namespace JMS\JobQueueBundle\Exception;
+namespace Eo\JobQueueBundle\Exception;
 
-use JMS\JobQueueBundle\Model\JobInterface;
+use Eo\JobQueueBundle\Model\JobInterface;
 
 class InvalidStateTransitionException extends \InvalidArgumentException
 {

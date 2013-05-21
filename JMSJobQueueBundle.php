@@ -16,13 +16,13 @@
  * limitations under the License.
  */
 
-namespace JMS\JobQueueBundle;
+namespace Eo\JobQueueBundle;
 
-use JMS\JobQueueBundle\DependencyInjection\CompilerPass\LinkGeneratorsPass;
+use Eo\JobQueueBundle\DependencyInjection\CompilerPass\LinkGeneratorsPass;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 
-class JMSJobQueueBundle extends Bundle
+class EoJobQueueBundle extends Bundle
 {
     public function build(ContainerBuilder $container)
     {

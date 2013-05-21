@@ -1,6 +1,6 @@
 <?php
 
-namespace JMS\JobQueueBundle\Tests\Functional\TestBundle\Command;
+namespace Eo\JobQueueBundle\Tests\Functional\TestBundle\Command;
 
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -9,7 +9,7 @@ class NeverEndingCommand extends \Symfony\Bundle\FrameworkBundle\Command\Contain
 {
     protected function configure()
     {
-        $this->setName('jms-job-queue:never-ending');
+        $this->setName('eo-job-queue:never-ending');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)

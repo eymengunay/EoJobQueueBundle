@@ -1,10 +1,10 @@
 <?php
 
-namespace JMS\JobQueueBundle\Controller;
+namespace Eo\JobQueueBundle\Controller;
 
 use Doctrine\Common\Util\ClassUtils;
 use JMS\DiExtraBundle\Annotation as DI;
-use JMS\JobQueueBundle\Entity\Job;
+use Eo\JobQueueBundle\Entity\Job;
 use Pagerfanta\Adapter\DoctrineODMMongoDBAdapter;
 use Pagerfanta\Pagerfanta;
 use Pagerfanta\View\TwitterBootstrapView;
@@ -17,8 +17,8 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 class ODMJobController extends Controller
 {
     /**
-     * @Route("/", name = "jms_jobs_overview")
-     * @Template("JMSJobQueueBundle:Job:overview.html.twig")
+     * @Route("/", name = "eo_jobs_overview")
+     * @Template("EoJobQueueBundle:Job:overview.html.twig")
      */
     public function overviewAction()
     {
@@ -41,7 +41,7 @@ class ODMJobController extends Controller
 
         $pagerView = new TwitterBootstrapView();
         $routeGenerator = function($page) use ($router, $pager) {
-            return $router->generate('jms_jobs_overview', array('page' => $page, 'per_page' => $pager->getMaxPerPage()));
+            return $router->generate('eo_jobs_overview', array('page' => $page, 'per_page' => $pager->getMaxPerPage()));
         };
 
         return array(
@@ -53,7 +53,7 @@ class ODMJobController extends Controller
     }
 
     /**
-     * @Route("/{id}", name = "jms_jobs_details")
+     * @Route("/{id}", name = "eo_jobs_details")
      * @Template
      */
     public function detailsAction(Job $job)
@@ -71,7 +71,7 @@ class ODMJobController extends Controller
         $statisticData = $statisticOptions = array();
         if ($this->statisticsEnabled) {
             $dataPerCharacteristic = array();
-            foreach ($this->getDm()->getConnection()->query("SELECT * FROM jms_job_statistics WHERE job_id = ".$job->getId()) as $row) {
+            foreach ($this->getDm()->getConnection()->query("SELECT * FROM eo_job_statistics WHERE job_id = ".$job->getId()) as $row) {
                 $dataPerCharacteristic[$row['characteristic']][] = array(
                     $row['createdAt'],
                     $row['charValue'],
@@ -114,7 +114,7 @@ class ODMJobController extends Controller
     }
 
     /**
-     * @Route("/{id}/retry", name = "jms_jobs_retry_job")
+     * @Route("/{id}/retry", name = "eo_jobs_retry_job")
      */
     public function retryJobAction(Job $job)
     {
@@ -133,7 +133,7 @@ class ODMJobController extends Controller
         $this->getDm()->persist($retryJob);
         $this->getDm()->flush();
 
-        $url = $this->router->generate('jms_jobs_details', array('id' => $retryJob->getId()), false);
+        $url = $this->router->generate('eo_jobs_details', array('id' => $retryJob->getId()), false);
 
         return new RedirectResponse($url, 201);
     }
@@ -144,7 +144,7 @@ class ODMJobController extends Controller
         return $this->container->get('doctrine_mongodb')->getManagerForClass($this->getJobClass());
     }
 
-    /** @return \JMS\JobQueueBundle\Entity\Repository\JobRepository */
+    /** @return \Eo\JobQueueBundle\Entity\Repository\JobRepository */
     private function getRepo()
     {
         return $this->getDm()->getRepository($this->getJobClass());
@@ -152,6 +152,6 @@ class ODMJobController extends Controller
 
     private function getJobClass()
     {
-        return $this->container->getParameter('jms_job_queue.job_class');
+        return $this->container->getParameter('eo_job_queue.job_class');
     }
 }

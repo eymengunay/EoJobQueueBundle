@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-namespace JMS\JobQueueBundle\DependencyInjection;
+namespace Eo\JobQueueBundle\DependencyInjection;
 
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\Config\FileLocator;
@@ -28,7 +28,7 @@ use Symfony\Component\DependencyInjection\Loader;
  *
  * To learn more see {@link http://symfony.com/doc/current/cookbook/bundles/extension.html}
  */
-class JMSJobQueueExtension extends Extension
+class EoJobQueueExtension extends Extension
 {
     /**
      * {@inheritDoc}
@@ -45,14 +45,14 @@ class JMSJobQueueExtension extends Extension
         if (!in_array(strtolower($config['db_driver']), array('mongodb', 'orm'))) {
             throw new \InvalidArgumentException(sprintf('Invalid db driver "%s".', $config['db_driver']));
         }
-        $container->setParameter('jms_job_queue.db_driver', $config['db_driver']);
+        $container->setParameter('eo_job_queue.db_driver', $config['db_driver']);
         $loader->load($config['db_driver'] . '.xml');
 
         // Job class
-        $container->setParameter('jms_job_queue.job_class', $config['job_class']);
+        $container->setParameter('eo_job_queue.job_class', $config['job_class']);
 
         // Statistics
-        $container->setParameter('jms_job_queue.statistics', $config['statistics']);
+        $container->setParameter('eo_job_queue.statistics', $config['statistics']);
         if ($config['statistics']) {
             $loader->load('statistics.xml');
         }

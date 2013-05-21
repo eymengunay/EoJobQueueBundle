@@ -1,6 +1,6 @@
 <?php
 
-namespace JMS\JobQueueBundle\Tests\Functional;
+namespace Eo\JobQueueBundle\Tests\Functional;
 
 use Doctrine\ORM\EntityManager;
 

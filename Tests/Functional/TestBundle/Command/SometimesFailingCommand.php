@@ -1,6 +1,6 @@
 <?php
 
-namespace JMS\JobQueueBundle\Tests\Functional\TestBundle\Command;
+namespace Eo\JobQueueBundle\Tests\Functional\TestBundle\Command;
 
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -11,7 +11,7 @@ class SometimesFailingCommand extends \Symfony\Bundle\FrameworkBundle\Command\Co
     protected function configure()
     {
         $this
-            ->setName('jms-job-queue:sometimes-failing-cmd')
+            ->setName('eo-job-queue:sometimes-failing-cmd')
             ->addArgument('time', InputArgument::REQUIRED)
         ;
     }

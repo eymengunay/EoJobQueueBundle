@@ -1,5 +1,5 @@
-{% extends "JMSJobQueueBundle::base.html.twig" %}
-{% import "JMSJobQueueBundle:Job:macros.html.twig" as macros %}
+{% extends "EoJobQueueBundle::base.html.twig" %}
+{% import "EoJobQueueBundle:Job:macros.html.twig" as macros %}
 
 {% block title %}Overview - {{ parent() }}{% endblock %}
 
@@ -25,8 +25,8 @@
         {% if jobPager.currentPage == 1 and jobsWithError|length > 0 %}
         {% for job in jobsWithError %}
         <tr>
-            <td><a href="{{ path("jms_jobs_details", {"id": job.id}) }}">{{ job.id }}</a></td>
-            <td><a href="{{ path("jms_jobs_details", {"id": job.id}) }}">{{ macros.command(job) }}</a></td>
+            <td><a href="{{ path("eo_jobs_details", {"id": job.id}) }}">{{ job.id }}</a></td>
+            <td><a href="{{ path("eo_jobs_details", {"id": job.id}) }}">{{ macros.command(job) }}</a></td>
             <td>{{ macros.state(job) }}</td>
             <td>{{ macros.ago(job.createdAt) }}</td>
         </tr>
@@ -38,8 +38,8 @@
 
         {% for job in jobPager %}
         <tr>
-            <td><a href="{{ path("jms_jobs_details", {"id": job.id}) }}">{{ job.id }}</a></td>
-            <td><a href="{{ path("jms_jobs_details", {"id": job.id}) }}">{{ macros.command(job) }}</a></td>
+            <td><a href="{{ path("eo_jobs_details", {"id": job.id}) }}">{{ job.id }}</a></td>
+            <td><a href="{{ path("eo_jobs_details", {"id": job.id}) }}">{{ macros.command(job) }}</a></td>
             <td>{{ macros.state(job) }}</td>
             <td>{{ macros.ago(job.createdAt) }}</td>
         </tr>

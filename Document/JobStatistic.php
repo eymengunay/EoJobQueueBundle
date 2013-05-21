@@ -16,14 +16,14 @@
  * limitations under the License.
  */
 
-namespace JMS\JobQueueBundle\Document;
+namespace Eo\JobQueueBundle\Document;
 
 use Doctrine\ODM\MongoDB\Mapping\Annotations as ODM;
 
 use Doctrine\Common\Collections\ArrayCollection;
-use JMS\JobQueueBundle\Exception\InvalidStateTransitionException;
-use JMS\JobQueueBundle\Exception\LogicException;
-use JMS\JobQueueBundle\Model\JobInterface;
+use Eo\JobQueueBundle\Exception\InvalidStateTransitionException;
+use Eo\JobQueueBundle\Exception\LogicException;
+use Eo\JobQueueBundle\Model\JobInterface;
 use Symfony\Component\HttpKernel\Exception\FlattenException;
 
 /**

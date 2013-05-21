@@ -16,9 +16,9 @@
  * limitations under the License.
  */
 
-namespace JMS\JobQueueBundle\Tests\Entity;
+namespace Eo\JobQueueBundle\Tests\Entity;
 
-use JMS\JobQueueBundle\Entity\Job;
+use Eo\JobQueueBundle\Entity\Job;
 
 class JobTest extends \PHPUnit_Framework_TestCase
 {
@@ -37,7 +37,7 @@ class JobTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @depends testConstruct
-     * @expectedException JMS\JobQueueBundle\Exception\InvalidStateTransitionException
+     * @expectedException Eo\JobQueueBundle\Exception\InvalidStateTransitionException
      */
     public function testInvalidTransition(Job $job)
     {

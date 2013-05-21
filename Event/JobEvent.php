@@ -16,10 +16,10 @@
  * limitations under the License.
  */
 
-namespace JMS\JobQueueBundle\Event;
+namespace Eo\JobQueueBundle\Event;
 
-use JMS\JobQueueBundle\Entity\Job;
-use JMS\JobQueueBundle\Model\JobInterface;
+use Eo\JobQueueBundle\Entity\Job;
+use Eo\JobQueueBundle\Model\JobInterface;
 use Symfony\Component\EventDispatcher\Event;
 
 abstract class JobEvent extends Event

@@ -1,6 +1,6 @@
 <?php
 
-namespace JMS\JobQueueBundle\Tests\Functional\TestBundle\Command;
+namespace Eo\JobQueueBundle\Tests\Functional\TestBundle\Command;
 
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputInterface;
@@ -10,7 +10,7 @@ class ThrowsExceptionCommand extends ContainerAwareCommand
 {
     protected function configure()
     {
-        $this->setName('jms-job-queue:throws-exception-cmd');
+        $this->setName('eo-job-queue:throws-exception-cmd');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
