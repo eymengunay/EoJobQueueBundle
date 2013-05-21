@@ -12,7 +12,7 @@
         {
             "name":   "Eymen Gunay",
             "email":  "eymen@egunay.com"
-        },
+        }
     ],
     "require": {
         "symfony/framework-bundle": ">=2.1,<3.0-dev",
