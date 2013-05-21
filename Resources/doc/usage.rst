@@ -29,9 +29,9 @@ quite easily:
     $em->persist($dependentJob);
     $em->flush();
 
-Adding Related Entities to Jobs
+Adding Related Documents to Jobs
 ===============================
-If you want to link a job to another entity, for example to find the job more
+If you want to link a job to another document, for example to find the job more
 easily, the job provides a special many-to-any association:
 
 .. code-block :: php
@@ -39,11 +39,11 @@ easily, the job provides a special many-to-any association:
     <?php
 
     $job = new Job('a');
-    $job->addRelatedEntity($anyEntity);
+    $job->addRelatedDocument($anyDocument);
     $em->persist($job);
     $em->flush();
 
-    $em->getRepository('EoJobQueueBundle:Job')->findJobForRelatedEntity('a', $anyEntity);
+    $em->getRepository('EoJobQueueBundle:Job')->findJobForRelatedDocument('a', $anyDocument);
 
 Schedule a Jobs
 ===============

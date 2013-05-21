@@ -26,33 +26,33 @@ class ManyToAnyListener
 
     public function postLoad(\Doctrine\Common\EventArgs\LifecycleEventArgs $event)
     {
-        $entity = $event->getDocument();
-        if ( ! $entity instanceof \Eo\JobQueueBundle\Document\Job) {
+        $document = $event->getDocument();
+        if ( ! $document instanceof \Eo\JobQueueBundle\Document\Job) {
             return;
         }
 
-        $this->ref->setValue($entity, new PersistentRelatedEntitiesCollection($this->registry, $entity));
+        $this->ref->setValue($document, new PersistentRelatedDocumentsCollection($this->registry, $document));
     }
 
     public function postPersist(\Doctrine\Common\EventArgs\LifecycleEventArgs $event)
     {
-        $entity = $event->getEntity();
-        if ( ! $entity instanceof \Eo\JobQueueBundle\Document\Job) {
+        $document = $event->getDocument();
+        if ( ! $document instanceof \Eo\JobQueueBundle\Document\Job) {
             return;
         }
 
         $con = $event->getDocumentManager()->getConnection();
-        foreach ($this->ref->getValue($entity) as $relatedEntity) {
-            $relClass = \Doctrine\Common\Util\ClassUtils::getClass($relatedEntity);
-            $relId = $this->registry->getManagerForClass($relClass)->getMetadataFactory()->getMetadataFor($relClass)->getIdentifierValues($relatedEntity);
+        foreach ($this->ref->getValue($document) as $relatedDocument) {
+            $relClass = \Doctrine\Common\Util\ClassUtils::getClass($relatedDocument);
+            $relId = $this->registry->getManagerForClass($relClass)->getMetadataFactory()->getMetadataFor($relClass)->getIdentifierValues($relatedDocument);
             asort($relId);
 
             if ( ! $relId) {
-                throw new \RuntimeException('The identifier for the related entity "'.$relClass.'" was empty.');
+                throw new \RuntimeException('The identifier for the related document "'.$relClass.'" was empty.');
             }
 
-            $con->executeUpdate("INSERT INTO eo_job_related_entities (job_id, related_class, related_id) VALUES (:jobId, :relClass, :relId)", array(
-                'jobId' => $entity->getId(),
+            $con->executeUpdate("INSERT INTO eo_job_related_documents (job_id, related_class, related_id) VALUES (:jobId, :relClass, :relId)", array(
+                'jobId' => $document->getId(),
                 'relClass' => $relClass,
                 'relId' => json_encode($relId),
             ));

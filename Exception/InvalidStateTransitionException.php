@@ -18,7 +18,7 @@
 
 namespace Eo\JobQueueBundle\Exception;
 
-use Eo\JobQueueBundle\Model\JobInterface;
+use Eo\JobQueueBundle\Document\JobInterface;
 
 class InvalidStateTransitionException extends \InvalidArgumentException
 {

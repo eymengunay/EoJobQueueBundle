@@ -16,12 +16,12 @@
  * limitations under the License.
  */
 
-namespace Eo\JobQueueBundle\Model;
+namespace Eo\JobQueueBundle\Document;
 
 use Symfony\Component\HttpKernel\Exception\FlattenException;
 
 /**
- * Eo\JobQueueBundle\Model\JobInterface
+ * Eo\JobQueueBundle\Document\JobInterface
  *
  * @author Eymen Gunay <eymen@egunay.com>
  */

@@ -6,6 +6,7 @@ declare(ticks = 10000000);
 
 use Doctrine\DBAL\Types\Type;
 
+use Eo\JobQueueBundle\Document\JobStatistic;
 use Symfony\Bundle\FrameworkBundle\Console\Application as BaseApplication;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -22,6 +23,7 @@ class Application extends BaseApplication
 {
     private $insertStatStmt;
     private $input;
+    private $dm;
 
     public function __construct(KernelInterface $kernel)
     {
@@ -30,8 +32,9 @@ class Application extends BaseApplication
         $this->getDefinition()->addOption(new InputOption('--eo-job-id', null, InputOption::VALUE_REQUIRED, 'The ID of the Job.'));
 
         $kernel->boot();
+
+        $this->dm = $this->getDocumentManager();
         if ($kernel->getContainer()->getParameter('eo_job_queue.statistics')) {
-            $this->insertStatStmt = $this->getConnection()->prepare("INSERT INTO eo_job_statistics (job_id, characteristic, createdAt, charValue) VALUES (:jobId, :name, :createdAt, :value)");
             register_tick_function(array($this, 'onTick'));
         }
     }
@@ -62,14 +65,17 @@ class Application extends BaseApplication
             'memory' => memory_get_usage(),
         );
 
-        $this->insertStatStmt->bindValue('jobId', $jobId, \PDO::PARAM_INT);
-        $this->insertStatStmt->bindValue('createdAt', new \DateTime(), Type::getType('datetime'));
-
         foreach ($characteristics as $name => $value) {
-            $this->insertStatStmt->bindValue('name', $name);
-            $this->insertStatStmt->bindValue('value', $value);
-            $this->insertStatStmt->execute();
+            $stat = new JobStatistic();
+
+            $stat->setJobId($jobId);
+            $stat->setCreatedAt(new \DateTime());
+            $stat->setCharacteristic($name);
+            $stat->setCharValue($value);
+
+            $this->dm->persist($stat);
         }
+        $this->dm->flush();
     }
 
     private function saveDebugInformation(\Exception $ex = null)
@@ -78,16 +84,22 @@ class Application extends BaseApplication
             return;
         }
 
-        $this->getConnection()->executeUpdate("UPDATE eo_jobs SET stackTrace = :trace, memoryUsage = :memoryUsage, memoryUsageReal = :memoryUsageReal WHERE id = :id", array(
-            'id' => $jobId,
-            'memoryUsage' => memory_get_peak_usage(),
-            'memoryUsageReal' => memory_get_peak_usage(true),
-            'trace' => serialize($ex ? FlattenException::create($ex) : null),
-        ));
+        $this->getQueryBuilder()
+            ->update()
+            ->field('id')->equals($jobId)
+            ->field('memoryUsage')->set(memory_get_peak_usage())
+            ->field('memoryUsageReal')->set(memory_get_peak_usage(true))
+            ->field('stackTrace')->set(serialize($ex ? FlattenException::create($ex) : null))
+        ;
     }
 
-    private function getConnection()
+    private function getQueryBuilder()
     {
-        return $this->getKernel()->getContainer()->get('doctrine')->getManagerForClass('EoJobQueueBundle:Job')->getConnection();
+        return $this->getDocumentManager()->createQueryBuilder($this->getKernel()->getContainer()->getParameter('eo_job_queue.job_class'));
+    }
+
+    private function getDocumentManager()
+    {
+        return $this->getKernel()->getContainer()->get('doctrine.odm.mongodb.document_manager');
     }
 }

@@ -2,7 +2,7 @@
 
 namespace Eo\JobQueueBundle\Command;
 
-use Eo\JobQueueBundle\Entity\Job;
+use Eo\JobQueueBundle\Document\Job;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputArgument;

@@ -4,53 +4,42 @@ namespace Eo\JobQueueBundle\Controller;
 
 use Doctrine\Common\Util\ClassUtils;
 use JMS\DiExtraBundle\Annotation as DI;
-use Eo\JobQueueBundle\Entity\Job;
-use Pagerfanta\Adapter\DoctrineORMAdapter;
+use Eo\JobQueueBundle\Document\Job;
+use Pagerfanta\Adapter\DoctrineODMMongoDBAdapter;
 use Pagerfanta\Pagerfanta;
 use Pagerfanta\View\TwitterBootstrapView;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 
-class JobController
+class JobController extends Controller
 {
-    /** @DI\Inject("doctrine") */
-    private $registry;
-
-    /** @DI\Inject */
-    private $request;
-
-    /** @DI\Inject */
-    private $router;
-
-    /** @DI\Inject("%eo_job_queue.statistics%") */
-    private $statisticsEnabled;
-
     /**
      * @Route("/", name = "eo_jobs_overview")
-     * @Template
+     * @Template("EoJobQueueBundle:Job:overview.html.twig")
      */
     public function overviewAction()
     {
         $lastJobsWithError = $this->getRepo()->findLastJobsWithError(5);
 
-        $qb = $this->getEm()->createQueryBuilder();
-        $qb->select('j')->from('EoJobQueueBundle:Job', 'j')
-                ->where($qb->expr()->isNull('j.originalJob'))
-                ->orderBy('j.id', 'desc');
+        $qb = $this->getDm()->createQueryBuilder($this->getJobClass());
+        $qb->field('originalJob')->equals(null)
+            ->sort('createdAt', 'desc');
 
         foreach ($lastJobsWithError as $i => $job) {
-            $qb->andWhere($qb->expr()->neq('j.id', '?'.$i));
-            $qb->setParameter($i, $job->getId());
+            $qb->field('originalJob')->notEqual($i);
         }
 
-        $pager = new Pagerfanta(new DoctrineORMAdapter($qb));
-        $pager->setCurrentPage(max(1, (integer) $this->request->query->get('page', 1)));
-        $pager->setMaxPerPage(max(5, min(50, (integer) $this->request->query->get('per_page', 20))));
+        $request = $this->container->get('request');
+        $router = $this->container->get('router');
+
+        $pager = new Pagerfanta(new DoctrineODMMongoDBAdapter($qb));
+        $pager->setCurrentPage(max(1, (integer) $request->query->get('page', 1)));
+        $pager->setMaxPerPage(max(5, min(50, (integer) $request->query->get('per_page', 20))));
 
         $pagerView = new TwitterBootstrapView();
-        $router = $this->router;
         $routeGenerator = function($page) use ($router, $pager) {
             return $router->generate('eo_jobs_overview', array('page' => $page, 'per_page' => $pager->getMaxPerPage()));
         };
@@ -69,20 +58,20 @@ class JobController
      */
     public function detailsAction(Job $job)
     {
-        $relatedEntities = array();
-        foreach ($job->getRelatedEntities() as $entity) {
-            $class = ClassUtils::getClass($entity);
-            $relatedEntities[] = array(
+        $relatedDocuments = array();
+        foreach ($job->getRelatedDocuments() as $document) {
+            $class = ClassUtils::getClass($document);
+            $relatedDocuments[] = array(
                 'class' => $class,
-                'id' => json_encode($this->registry->getManagerForClass($class)->getClassMetadata($class)->getIdentifierValues($entity)),
-                'raw' => $entity,
+                'id' => json_encode($this->getDm()->getClassMetadata($class)->getIdentifierValues($document)),
+                'raw' => $document,
             );
         }
 
         $statisticData = $statisticOptions = array();
         if ($this->statisticsEnabled) {
             $dataPerCharacteristic = array();
-            foreach ($this->registry->getManagerForClass('EoJobQueueBundle:Job')->getConnection()->query("SELECT * FROM eo_job_statistics WHERE job_id = ".$job->getId()) as $row) {
+            foreach ($this->getDm()->getConnection()->query("SELECT * FROM eo_job_statistics WHERE job_id = ".$job->getId()) as $row) {
                 $dataPerCharacteristic[$row['characteristic']][] = array(
                     $row['createdAt'],
                     $row['charValue'],
@@ -117,7 +106,7 @@ class JobController
 
         return array(
             'job' => $job,
-            'relatedEntities' => $relatedEntities,
+            'relatedDocuments' => $relatedDocuments,
             'incomingDependencies' => $this->getRepo()->getIncomingDependencies($job),
             'statisticData' => $statisticData,
             'statisticOptions' => $statisticOptions,
@@ -141,23 +130,28 @@ class JobController
 
         $retryJob = clone $job;
 
-        $this->getEm()->persist($retryJob);
-        $this->getEm()->flush();
+        $this->getDm()->persist($retryJob);
+        $this->getDm()->flush();
 
         $url = $this->router->generate('eo_jobs_details', array('id' => $retryJob->getId()), false);
 
         return new RedirectResponse($url, 201);
     }
 
-    /** @return \Doctrine\ORM\EntityManager */
-    private function getEm()
+    /** @return \Doctrine\ORM\DocumentManager */
+    private function getDm()
     {
-        return $this->registry->getManagerForClass('EoJobQueueBundle:Job');
+        return $this->container->get('doctrine_mongodb')->getManagerForClass($this->getJobClass());
     }
 
-    /** @return \Eo\JobQueueBundle\Entity\Repository\JobRepository */
+    /** @return \Eo\JobQueueBundle\Document\Repository\JobRepository */
     private function getRepo()
     {
-        return $this->getEm()->getRepository('EoJobQueueBundle:Job');
+        return $this->getDm()->getRepository($this->getJobClass());
+    }
+
+    private function getJobClass()
+    {
+        return $this->container->getParameter('eo_job_queue.job_class');
     }
 }

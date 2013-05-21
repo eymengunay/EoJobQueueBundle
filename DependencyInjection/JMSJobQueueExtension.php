@@ -41,13 +41,6 @@ class EoJobQueueExtension extends Extension
         $loader = new Loader\XmlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('services.xml');
 
-        // Set db_driver
-        if (!in_array(strtolower($config['db_driver']), array('mongodb', 'orm'))) {
-            throw new \InvalidArgumentException(sprintf('Invalid db driver "%s".', $config['db_driver']));
-        }
-        $container->setParameter('eo_job_queue.db_driver', $config['db_driver']);
-        $loader->load($config['db_driver'] . '.xml');
-
         // Job class
         $container->setParameter('eo_job_queue.job_class', $config['job_class']);
 

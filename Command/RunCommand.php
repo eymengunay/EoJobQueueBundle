@@ -25,8 +25,8 @@ use Eo\JobQueueBundle\Exception\InvalidArgumentException;
 use Eo\JobQueueBundle\Event\NewOutputEvent;
 use Symfony\Component\Process\ProcessBuilder;
 use Symfony\Component\Process\Process;
-use Eo\JobQueueBundle\Entity\Job;
-use Eo\JobQueueBundle\Model\JobInterface;
+use Eo\JobQueueBundle\Document\Job;
+use Eo\JobQueueBundle\Document\JobInterface;
 use Eo\JobQueueBundle\Event\StateChangeEvent;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputInterface;
@@ -68,12 +68,8 @@ class RunCommand extends \Symfony\Bundle\FrameworkBundle\Command\ContainerAwareC
         $this->env = $input->getOption('env');
         $this->verbose = $input->getOption('verbose');
         $this->output = $output;
-        $doctrine = $this->getContainer()->getParameter('eo_job_queue.db_driver') == 'mongodb' ? 'doctrine_mongodb' : 'doctrine';
-        $this->registry = $this->getContainer()->get($doctrine);
+        $this->registry = $this->getContainer()->get('doctrine_mongodb');
         $this->dispatcher = $this->getContainer()->get('event_dispatcher');
-        if ($this->getContainer()->getParameter('eo_job_queue.db_driver') == 'orm') {
-            $this->getEntityManager()->getConnection()->getConfiguration()->setSQLLogger(null);
-        }
 
         $this->cleanUpStaleJobs();
 
@@ -154,7 +150,7 @@ class RunCommand extends \Symfony\Bundle\FrameworkBundle\Command\ContainerAwareC
                 $data['job']->addOutput($newOutput);
                 $data['job']->addErrorOutput($newErrorOutput);
                 $data['job']->checked();
-                $em = $this->getEntityManager();
+                $em = $this->getDocumentManager();
                 $em->persist($data['job']);
                 $em->flush($data['job']);
 
@@ -165,7 +161,7 @@ class RunCommand extends \Symfony\Bundle\FrameworkBundle\Command\ContainerAwareC
 
             // If the Job exited with an exception, let's reload it so that we
             // get access to the stack trace. This might be useful for listeners.
-            $this->getEntityManager()->refresh($data['job']);
+            $this->getDocumentManager()->refresh($data['job']);
 
             $data['job']->setExitCode($data['process']->getExitCode());
             $data['job']->setOutput($data['process']->getOutput());
@@ -197,7 +193,7 @@ class RunCommand extends \Symfony\Bundle\FrameworkBundle\Command\ContainerAwareC
         }
 
         $job->setState(Job::STATE_RUNNING);
-        $em = $this->getEntityManager();
+        $em = $this->getDocumentManager();
         $em->persist($job);
         $em->flush($job);
 
@@ -289,13 +285,13 @@ class RunCommand extends \Symfony\Bundle\FrameworkBundle\Command\ContainerAwareC
         return $this->getContainer()->getParameter('eo_job_queue.job_class');
     }
 
-    private function getEntityManager()
+    private function getDocumentManager()
     {
         return $this->registry->getManagerForClass($this->getJobClass());
     }
 
     private function getRepository()
     {
-        return $this->getEntityManager()->getRepository($this->getJobClass());
+        return $this->getDocumentManager()->getRepository($this->getJobClass());
     }
 }

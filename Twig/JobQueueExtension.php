@@ -56,10 +56,10 @@ class JobQueueExtension extends \Twig_Extension
         return $str;
     }
 
-    public function isLinkable($entity)
+    public function isLinkable($document)
     {
         foreach ($this->linkGenerators as $generator) {
-            if ($generator->supports($entity)) {
+            if ($generator->supports($document)) {
                 return true;
             }
         }
@@ -67,26 +67,26 @@ class JobQueueExtension extends \Twig_Extension
         return false;
     }
 
-    public function generatePath($entity)
+    public function generatePath($document)
     {
         foreach ($this->linkGenerators as $generator) {
-            if ($generator->supports($entity)) {
-                return $generator->generate($entity);
+            if ($generator->supports($document)) {
+                return $generator->generate($document);
             }
         }
 
-        throw new \RuntimeException(sprintf('The entity "%s" has no link generator.', get_class($entity)));
+        throw new \RuntimeException(sprintf('The document "%s" has no link generator.', get_class($document)));
     }
 
-    public function getLinkname($entity)
+    public function getLinkname($document)
     {
         foreach ($this->linkGenerators as $generator) {
-            if ($generator->supports($entity)) {
-                return $generator->getLinkname($entity);
+            if ($generator->supports($document)) {
+                return $generator->getLinkname($document);
             }
         }
 
-        throw new \RuntimeException(sprintf('The entity "%s" has no link generator.', get_class($entity)));
+        throw new \RuntimeException(sprintf('The document "%s" has no link generator.', get_class($document)));
     }
 
     public function getName()

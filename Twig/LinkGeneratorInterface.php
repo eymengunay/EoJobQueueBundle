@@ -4,7 +4,7 @@ namespace Eo\JobQueueBundle\Twig;
 
 interface LinkGeneratorInterface
 {
-    function supports($entity);
-    function generate($entity);
-    function getLinkname($entity);
+    function supports($document);
+    function generate($document);
+    function getLinkname($document);
 }

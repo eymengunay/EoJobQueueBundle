@@ -1,6 +1,6 @@
 <?php
 
-namespace Eo\JobQueueBundle\Entity\Listener;
+namespace Eo\JobQueueBundle\Document\Listener;
 
 use ArrayIterator;
 use Closure;
@@ -9,22 +9,22 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Collections\Expr\ClosureExpressionVisitor;
 use Doctrine\Common\Collections\Selectable;
-use Eo\JobQueueBundle\Entity\Job;
+use Eo\JobQueueBundle\Document\Job;
 use Symfony\Bridge\Doctrine\RegistryInterface;
 use Symfony\Component\Validator\Constraints\Collection as Collection2;
 
 /**
- * Collection for persistent related entities.
+ * Collection for persistent related documents.
  *
  * We do not support all of Doctrine's built-in features.
  *
  * @author Johannes M. Schmitt <schmittjoh@gmail.com>
  */
-class PersistentRelatedEntitiesCollection implements Collection, Selectable
+class PersistentRelatedDocumentsCollection implements Collection, Selectable
 {
     private $registry;
     private $job;
-    private $entities;
+    private $documents;
 
     public function __construct(RegistryInterface $registry, Job $job)
     {
@@ -41,7 +41,7 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
     {
         $this->initialize();
 
-        return $this->entities;
+        return $this->documents;
     }
 
     /**
@@ -54,7 +54,7 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
     {
         $this->initialize();
 
-        return reset($this->entities);
+        return reset($this->documents);
     }
 
     /**
@@ -67,7 +67,7 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
     {
         $this->initialize();
 
-        return end($this->entities);
+        return end($this->documents);
     }
 
     /**
@@ -79,7 +79,7 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
     {
         $this->initialize();
 
-        return key($this->entities);
+        return key($this->documents);
     }
 
     /**
@@ -91,7 +91,7 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
     {
         $this->initialize();
 
-        return next($this->entities);
+        return next($this->documents);
     }
 
     /**
@@ -103,7 +103,7 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
     {
         $this->initialize();
 
-        return current($this->entities);
+        return current($this->documents);
     }
 
     /**
@@ -170,7 +170,7 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
      */
     public function offsetSet($offset, $value)
     {
-        throw new \LogicException('Adding new related entities is not supported after initial creation.');
+        throw new \LogicException('Adding new related documents is not supported after initial creation.');
     }
 
     /**
@@ -196,7 +196,7 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
     {
         $this->initialize();
 
-        return isset($this->entities[$key]);
+        return isset($this->documents[$key]);
     }
 
     /**
@@ -213,7 +213,7 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
     {
         $this->initialize();
 
-        foreach ($this->entities as $collectionElement) {
+        foreach ($this->documents as $collectionElement) {
             if ($element === $collectionElement) {
                 return true;
             }
@@ -232,7 +232,7 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
     {
         $this->initialize();
 
-        foreach ($this->entities as $key => $element) {
+        foreach ($this->documents as $key => $element) {
             if ($p($key, $element)) {
                 return true;
             }
@@ -253,7 +253,7 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
     {
         $this->initialize();
 
-        return array_search($element, $this->entities, true);
+        return array_search($element, $this->documents, true);
     }
 
     /**
@@ -266,8 +266,8 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
     {
         $this->initialize();
 
-        if (isset($this->entities[$key])) {
-            return $this->entities[$key];
+        if (isset($this->documents[$key])) {
+            return $this->documents[$key];
         }
         return null;
     }
@@ -281,7 +281,7 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
     {
         $this->initialize();
 
-        return array_keys($this->entities);
+        return array_keys($this->documents);
     }
 
     /**
@@ -293,7 +293,7 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
     {
         $this->initialize();
 
-        return array_values($this->entities);
+        return array_values($this->documents);
     }
 
     /**
@@ -307,7 +307,7 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
     {
         $this->initialize();
 
-        return count($this->entities);
+        return count($this->documents);
     }
 
     /**
@@ -332,7 +332,7 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
      */
     public function add($value)
     {
-        throw new \LogicException('Adding new entities is not supported after creation.');
+        throw new \LogicException('Adding new documents is not supported after creation.');
     }
 
     /**
@@ -346,7 +346,7 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
     {
         $this->initialize();
 
-        return ! $this->entities;
+        return ! $this->documents;
     }
 
     /**
@@ -358,7 +358,7 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
     {
         $this->initialize();
 
-        return new ArrayIterator($this->entities);
+        return new ArrayIterator($this->documents);
     }
 
     /**
@@ -372,7 +372,7 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
     {
         $this->initialize();
 
-        return new ArrayCollection(array_map($func, $this->entities));
+        return new ArrayCollection(array_map($func, $this->documents));
     }
 
     /**
@@ -386,7 +386,7 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
     {
         $this->initialize();
 
-        return new ArrayCollection(array_filter($this->entities, $p));
+        return new ArrayCollection(array_filter($this->documents, $p));
     }
 
     /**
@@ -400,7 +400,7 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
     {
         $this->initialize();
 
-        foreach ($this->entities as $key => $element) {
+        foreach ($this->documents as $key => $element) {
             if ( ! $p($key, $element)) {
                 return false;
             }
@@ -423,7 +423,7 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
         $this->initialize();
 
         $coll1 = $coll2 = array();
-        foreach ($this->entities as $key => $element) {
+        foreach ($this->documents as $key => $element) {
             if ($p($key, $element)) {
                 $coll1[$key] = $element;
             } else {
@@ -466,7 +466,7 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
     {
         $this->initialize();
 
-        return array_slice($this->entities, $offset, $length, true);
+        return array_slice($this->documents, $offset, $length, true);
     }
 
     /**
@@ -481,7 +481,7 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
         $this->initialize();
 
         $expr     = $criteria->getWhereExpression();
-        $filtered = $this->entities;
+        $filtered = $this->documents;
 
         if ($expr) {
             $visitor  = new ClosureExpressionVisitor();
@@ -510,26 +510,26 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
 
     private function initialize()
     {
-        if (null !== $this->entities) {
+        if (null !== $this->documents) {
             return;
         }
 
         $con = $this->registry->getManagerForClass('EoJobQueueBundle:Job')->getConnection();
-        $entitiesPerClass = array();
+        $documentsPerClass = array();
         $count = 0;
-        foreach ($con->query("SELECT related_class, related_id FROM eo_job_related_entities WHERE job_id = ".$this->job->getId()) as $data) {
+        foreach ($con->query("SELECT related_class, related_id FROM eo_job_related_documents WHERE job_id = ".$this->job->getId()) as $data) {
             $count += 1;
-            $entitiesPerClass[$data['related_class']][] = json_decode($data['related_id'], true);
+            $documentsPerClass[$data['related_class']][] = json_decode($data['related_id'], true);
         }
 
         if (0 === $count) {
-            $this->entities = array();
+            $this->documents = array();
 
             return;
         }
 
-        $entities = array();
-        foreach ($entitiesPerClass as $className => $ids) {
+        $documents = array();
+        foreach ($documentsPerClass as $className => $ids) {
             $em = $this->registry->getManagerForClass($className);
             $qb = $em->createQueryBuilder()
                         ->select('e')->from($className, 'e');
@@ -550,9 +550,9 @@ class PersistentRelatedEntitiesCollection implements Collection, Selectable
                 $qb->orWhere($expr);
             }
 
-            $entities = array_merge($entities, $qb->getQuery()->getResult());
+            $documents = array_merge($documents, $qb->getQuery()->getResult());
         }
 
-        $this->entities = $entities;
+        $this->documents = $documents;
     }
 }

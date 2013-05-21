@@ -18,8 +18,8 @@
 
 namespace Eo\JobQueueBundle\Event;
 
-use Eo\JobQueueBundle\Entity\Job;
-use Eo\JobQueueBundle\Model\JobInterface;
+use Eo\JobQueueBundle\Document\Job;
+use Eo\JobQueueBundle\Document\JobInterface;
 use Eo\JobQueueBundle\Event\JobEvent;
 
 class NewOutputEvent extends JobEvent

@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Copyright 2012 Johannes M. Schmitt <schmittjoh@gmail.com>
+ * Copyright 2012 Eymen Gunay <eymen@egunay.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,17 +22,16 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ODM\MongoDB\Mapping\Annotations as ODM;
 use Eo\JobQueueBundle\Exception\InvalidStateTransitionException;
 use Eo\JobQueueBundle\Exception\LogicException;
-use Eo\JobQueueBundle\Model\Job as BaseJob;
-use Eo\JobQueueBundle\Model\JobInterface;
+use Eo\JobQueueBundle\Document\JobInterface;
 use Symfony\Component\HttpKernel\Exception\FlattenException;
 
 /**
- * @ODM\Document(repositoryClass = "Eo\JobQueueBundle\Document\Repository\JobRepository", collection="eo_jobs")
+ * @ODM\Document(repositoryClass = "Eo\JobQueueBundle\Document\Repository\JobRepository")
  * @ODM\ChangeTrackingPolicy("DEFERRED_EXPLICIT")
  *
  * @author Eymen Gunay <eymen@egunay.com>
  */
-class Job extends BaseJob implements JobInterface
+class Job implements JobInterface
 {
     /** State if job is inserted, but not yet ready to be started. */
     const STATE_NEW = 'new';
@@ -106,9 +105,7 @@ class Job extends BaseJob implements JobInterface
     /** @ODM\Field(type="hash") */
     protected $args;
 
-    /**
-     * @ODM\ReferenceMany(targetDocument = "Job")
-     */
+    /** @ODM\ReferenceMany(targetDocument = "Job") */
     protected $dependencies;
 
     /** @ODM\Field(type="string") */
@@ -194,6 +191,60 @@ class Job extends BaseJob implements JobInterface
     public function getId()
     {
         return $this->id;
+    }
+
+    public function setState($newState)
+    {
+        if ($newState === $this->state) {
+            return;
+        }
+
+        switch ($this->state) {
+            case self::STATE_NEW:
+                if ( ! in_array($newState, array(self::STATE_PENDING, self::STATE_CANCELED), true)) {
+                    throw new InvalidStateTransitionException($this, $newState, array(self::STATE_PENDING, self::STATE_CANCELED));
+                }
+
+                if (self::STATE_CANCELED === $newState) {
+                    $this->closedAt = new \DateTime();
+                }
+
+                break;
+
+            case self::STATE_PENDING:
+                if ( ! in_array($newState, array(self::STATE_RUNNING, self::STATE_CANCELED), true)) {
+                    throw new InvalidStateTransitionException($this, $newState, array(self::STATE_RUNNING, self::STATE_CANCELED));
+                }
+
+                if ($newState === self::STATE_RUNNING) {
+                    $this->startedAt = new \DateTime();
+                    $this->checkedAt = new \DateTime();
+                } else if ($newState === self::STATE_CANCELED) {
+                    $this->closedAt = new \DateTime();
+                }
+
+                break;
+
+            case self::STATE_RUNNING:
+                if ( ! in_array($newState, array(self::STATE_FINISHED, self::STATE_FAILED, self::STATE_TERMINATED, self::STATE_INCOMPLETE))) {
+                    throw new InvalidStateTransitionException($this, $newState, array(self::STATE_FINISHED, self::STATE_FAILED, self::STATE_TERMINATED, self::STATE_INCOMPLETE));
+                }
+
+                $this->closedAt = new \DateTime();
+
+                break;
+
+            case self::STATE_FINISHED:
+            case self::STATE_FAILED:
+            case self::STATE_TERMINATED:
+            case self::STATE_INCOMPLETE:
+                throw new InvalidStateTransitionException($this, $newState);
+
+            default:
+                throw new LogicException('The previous cases were exhaustive. Unknown state: '.$this->state);
+        }
+
+        $this->state = $newState;
     }
 
     public function getState()

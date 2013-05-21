@@ -23,8 +23,8 @@ use Doctrine\DBAL\Types\Type;
 use Doctrine\ODM\MongoDB\DocumentRepository;
 use Doctrine\ORM\Query\ResultSetMappingBuilder;
 use JMS\DiExtraBundle\Annotation as DI;
-use Eo\JobQueueBundle\Entity\Job;
-use Eo\JobQueueBundle\Model\JobInterface;
+use Eo\JobQueueBundle\Document\Job;
+use Eo\JobQueueBundle\Document\JobInterface;
 use Eo\JobQueueBundle\Event\StateChangeEvent;
 use Symfony\Bridge\Doctrine\RegistryInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -132,20 +132,20 @@ class JobRepository extends DocumentRepository
         $rsm = new ResultSetMappingBuilder($this->dm);
         $rsm->addRootDocumentFromClassMetadata('EoJobQueueBundle:Job', 'j');
 
-        return $this->dm->createNativeQuery("SELECT j.* FROM eo_jobs j INNER JOIN eo_job_related_entities r ON r.job_id = j.id WHERE r.related_class = :relClass AND r.related_id = :relId", $rsm)
+        return $this->dm->createNativeQuery("SELECT j.* FROM eo_jobs j INNER JOIN eo_job_related_documents r ON r.job_id = j.id WHERE r.related_class = :relClass AND r.related_id = :relId", $rsm)
                     ->setParameter('relClass', $relClass)
                     ->setParameter('relId', $relId)
                     ->getResult();
     }
 
-    public function findJobForRelatedEntity($command, $relatedDocument)
+    public function findJobForRelatedDocument($command, $relatedDocument)
     {
         list($relClass, $relId) = $this->getRelatedDocumentIdentifier($relatedDocument);
 
         $rsm = new ResultSetMappingBuilder($this->dm);
         $rsm->addRootDocumentFromClassMetadata('EoJobQueueBundle:Job', 'j');
 
-        return $this->dm->createNativeQuery("SELECT j.* FROM eo_jobs j INNER JOIN eo_job_related_entities r ON r.job_id = j.id WHERE r.related_class = :relClass AND r.related_id = :relId AND j.command = :command", $rsm)
+        return $this->dm->createNativeQuery("SELECT j.* FROM eo_jobs j INNER JOIN eo_job_related_documents r ON r.job_id = j.id WHERE r.related_class = :relClass AND r.related_id = :relId AND j.command = :command", $rsm)
                    ->setParameter('command', $command)
                    ->setParameter('relClass', $relClass)
                    ->setParameter('relId', $relId)
@@ -166,7 +166,7 @@ class JobRepository extends DocumentRepository
         asort($relId);
 
         if ( ! $relId) {
-            throw new \InvalidArgumentException(sprintf('The identifier for entity of class "%s" was empty.', $relClass));
+            throw new \InvalidArgumentException(sprintf('The identifier for document of class "%s" was empty.', $relClass));
         }
 
         return array($relClass, json_encode($relId));
@@ -193,7 +193,7 @@ class JobRepository extends DocumentRepository
         $visited = array();
         $this->closeJobInternal($job, $finalState, $visited);
 
-        // Clean-up entity manager to allow for garbage collection to kick in.
+        // Clean-up document manager to allow for garbage collection to kick in.
         foreach ($visited as $job) {
             // If the job is an original job which is now being retried, let's
             // not remove it just yet.

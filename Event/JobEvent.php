@@ -18,8 +18,8 @@
 
 namespace Eo\JobQueueBundle\Event;
 
-use Eo\JobQueueBundle\Entity\Job;
-use Eo\JobQueueBundle\Model\JobInterface;
+use Eo\JobQueueBundle\Document\Job;
+use Eo\JobQueueBundle\Document\JobInterface;
 use Symfony\Component\EventDispatcher\Event;
 
 abstract class JobEvent extends Event
