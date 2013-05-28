@@ -1,5 +1,7 @@
 # EoJobQueueBundle
 
+[![Dependencies Status](https://d2xishtp1ojlk0.cloudfront.net/d/9544114)](http://depending.in/eymengunay/EoJobQueueBundle)
+
 Mongodb ODM implementation for [JMSJobQueueBundle](http://jmsyst.com/bundles/JMSJobQueueBundle) which allows to schedule Symfony2 console commands as jobs.
 
 ## Prerequisites
