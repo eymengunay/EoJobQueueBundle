@@ -19,14 +19,13 @@
 namespace Eo\JobQueueBundle\Event;
 
 use Eo\JobQueueBundle\Document\Job;
-use Eo\JobQueueBundle\Document\JobInterface;
 use Eo\JobQueueBundle\Event\JobEvent;
 
 class StateChangeEvent extends JobEvent
 {
     private $newState;
 
-    public function __construct(JobInterface $job, $newState)
+    public function __construct(Job $job, $newState)
     {
         parent::__construct($job);
 

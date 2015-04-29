@@ -19,14 +19,13 @@
 namespace Eo\JobQueueBundle\Event;
 
 use Eo\JobQueueBundle\Document\Job;
-use Eo\JobQueueBundle\Document\JobInterface;
 use Symfony\Component\EventDispatcher\Event;
 
 abstract class JobEvent extends Event
 {
     private $job;
 
-    public function __construct(JobInterface $job)
+    public function __construct(Job $job)
     {
         $this->job = $job;
     }

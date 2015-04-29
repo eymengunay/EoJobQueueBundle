@@ -26,7 +26,6 @@ use Eo\JobQueueBundle\Event\NewOutputEvent;
 use Symfony\Component\Process\ProcessBuilder;
 use Symfony\Component\Process\Process;
 use Eo\JobQueueBundle\Document\Job;
-use Eo\JobQueueBundle\Document\JobInterface;
 use Eo\JobQueueBundle\Event\StateChangeEvent;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputInterface;
@@ -34,11 +33,22 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class RunCommand extends \Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand
 {
+    /** @var string */
     private $env;
+
+    /** @var boolean */
     private $verbose;
+
+    /** @var OutputInterface */
     private $output;
+
+    /** @var ManagerRegistry */
     private $registry;
+
+    /** @var EventDispatcher */
     private $dispatcher;
+
+    /** @var array */
     private $runningJobs = array();
 
     protected function configure()
@@ -47,7 +57,8 @@ class RunCommand extends \Symfony\Bundle\FrameworkBundle\Command\ContainerAwareC
             ->setName('eo-job-queue:run')
             ->setDescription('Runs jobs from the queue.')
             ->addOption('max-runtime', 'r', InputOption::VALUE_REQUIRED, 'The maximum runtime in seconds.', 900)
-            ->addOption('max-concurrent-jobs', 'j', InputOption::VALUE_REQUIRED, 'The maximum number of concurrent jobs.', 5)
+            ->addOption('max-concurrent-jobs', 'j', InputOption::VALUE_REQUIRED, 'The maximum number of concurrent jobs.', 4)
+            ->addOption('idle-time', null, InputOption::VALUE_REQUIRED, 'Time to sleep when the queue ran out of jobs.', 2)
         ;
     }
 
@@ -60,9 +71,14 @@ class RunCommand extends \Symfony\Bundle\FrameworkBundle\Command\ContainerAwareC
             throw new InvalidArgumentException('The maximum runtime must be greater than zero.');
         }
 
-        $maxConcurrentJobs = (integer) $input->getOption('max-concurrent-jobs');
-        if ($maxConcurrentJobs <= 0) {
-            throw new InvalidArgumentException('The maximum number of concurrent jobs must be greater than zero.');
+        $maxJobs = (integer) $input->getOption('max-concurrent-jobs');
+        if ($maxJobs <= 0) {
+            throw new InvalidArgumentException('The maximum number of jobs per queue must be greater than zero.');
+        }
+
+        $idleTime = (integer) $input->getOption('idle-time');
+        if ($idleTime <= 0) {
+            throw new InvalidArgumentException('Time to sleep when idling must be greater than zero.');
         }
 
         $this->env = $input->getOption('env');
@@ -77,7 +93,7 @@ class RunCommand extends \Symfony\Bundle\FrameworkBundle\Command\ContainerAwareC
             $this->checkRunningJobs();
 
             $excludedIds = array();
-            while (count($this->runningJobs) < $maxConcurrentJobs) {
+            while (count($this->runningJobs) < $maxJobs) {
                 if (null === $pendingJob = $this->getRepository()->findStartableJob($excludedIds)) {
                     sleep(2);
                     continue 2; // Check if the maximum runtime has been exceeded.
@@ -176,7 +192,7 @@ class RunCommand extends \Symfony\Bundle\FrameworkBundle\Command\ContainerAwareC
         gc_collect_cycles();
     }
 
-    private function startJob(JobInterface $job)
+    private function startJob(Job $job)
     {
         $event = new StateChangeEvent($job, Job::STATE_RUNNING);
         $this->dispatcher->dispatch('eo_job_queue.job_state_change', $event);
