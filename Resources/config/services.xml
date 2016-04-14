@@ -5,16 +5,10 @@
     xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
 
     <parameters>
-        <parameter key="eo_job_queue.twig.extension.class">Eo\JobQueueBundle\Twig\JobQueueExtension</parameter>
-        <parameter key="eo_job_queue.job_controller.class">Eo\JobQueueBundle\Controller\JobController</parameter>
         <parameter key="eo_job_queue.document.many_to_any_listener.class">Eo\JobQueueBundle\Document\Listener\ManyToAnyListener</parameter>
     </parameters>
 
     <services>
-        <!-- Twig extension -->
-        <service id="eo_job_queue.twig.extension" class="%eo_job_queue.twig.extension.class%">
-            <tag name="twig.extension" />
-        </service>
         <!-- Many to any listener -->
         <service id="eo_job_queue.document.many_to_any_listener" class="%eo_job_queue.document.many_to_any_listener.class%">
             <argument type="service" id="doctrine_mongodb" />

@@ -30,10 +30,8 @@
         "symfony/css-selector": "*",
         "symfony/process": "*",
         "doctrine/doctrine-bundle": "*",
-        "symfony/twig-bundle": "*",
         "symfony/form": "*",
-        "symfony/validator": "*",
-        "pagerfanta/pagerfanta": "dev-master"
+        "symfony/validator": "*"
     },
     "suggest": {
         "pagerfanta/pagerfanta": "Required when using the webinterface.",

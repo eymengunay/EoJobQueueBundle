@@ -57,51 +57,6 @@ eo_job_queue:
     job_class: JuliusJobBundle:Job
 ```
 
-### Enabling the Webinterface
-If you also want to use the webinterface where you can view the outputs, and
-exception stack traces for your jobs, you need to add the following to your
-
-`routing.yml`:
-
-```
-EoJobQueueBundle:
-    resource: "@EoJobQueueBundle/Controller/"
-    type: annotation
-    prefix: /jobs
-```
-
-and also include the `pagerfanta/pagerfanta` package in your composer file:
-
-```
-// composer.json
-{
-    // ...
-    require: {
-        // ...
-        "eo/job-queue-bundle": "dev-master",
-        "pagerfanta/pagerfanta": "dev-master"
-    }
-}
-```
-
-Then, update your dependencies using
-
-```
-php composer.phar update
-```
-
-Typically, you would also want to add some access control restrictions for these
-actions. If you are using `JMSSecurityExtraBundle` this could look like this:
-
-```
-jms_security_extra:
-    method_access_control:
-        "EoJobQueueBundle:.*:.*": "hasRole('ROLE_ADMIN')"
-```
-
-This will require the user to have the role `ROLE_ADMIN` if he wants to access
-any action from this bundle.
-
 ### Setting Up supervisord
 For this bundle to work, you have to make sure that one (and only one)
 instance of the console command `eo-job-queue:run` is running at all
