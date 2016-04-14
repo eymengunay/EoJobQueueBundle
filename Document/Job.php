@@ -22,7 +22,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ODM\MongoDB\Mapping\Annotations as ODM;
 use Eo\JobQueueBundle\Exception\InvalidStateTransitionException;
 use Eo\JobQueueBundle\Exception\LogicException;
-use Symfony\Component\HttpKernel\Exception\FlattenException;
+use Symfony\Component\Debug\Exception\FlattenException;
 
 /**
  * @ODM\Document(repositoryClass = "Eo\JobQueueBundle\Document\Repository\JobRepository")
