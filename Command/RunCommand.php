@@ -23,6 +23,7 @@ use Symfony\Component\Process\Exception\ProcessFailedException;
 use Eo\JobQueueBundle\Exception\LogicException;
 use Eo\JobQueueBundle\Exception\InvalidArgumentException;
 use Eo\JobQueueBundle\Event\NewOutputEvent;
+use Symfony\Component\Finder\Finder;
 use Symfony\Component\Process\ProcessBuilder;
 use Symfony\Component\Process\Process;
 use Eo\JobQueueBundle\Document\Job;
@@ -283,9 +284,25 @@ class RunCommand extends \Symfony\Bundle\FrameworkBundle\Command\ContainerAwareC
             $pb->add('exec');
         }
 
+        // Localize the `console` command
+        $finder = new Finder();
+        $finder
+            ->files()
+            ->name('console')
+            ->depth('< 2')
+            ->in(dirname($this->getContainer()->getParameter('kernel.root_dir')));
+
+        if (!count($finder)) {
+            throw new \RuntimeException('JMSJobQueueBundle wasn\'t able to find your `console` command.');
+        }
+        foreach ($finder as $file) {
+            $console = $file->getRealPath();
+            break;
+        }
+
         $pb
             ->add('php')
-            ->add($this->getContainer()->getParameter('kernel.root_dir').'/console')
+            ->add($console)
             ->add('--env='.$this->env)
         ;
 
