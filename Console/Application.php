@@ -11,7 +11,7 @@ use Symfony\Bundle\FrameworkBundle\Console\Application as BaseApplication;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\HttpKernel\Exception\FlattenException;
+use Symfony\Component\Debug\Exception\FlattenException;
 use Symfony\Component\HttpKernel\KernelInterface;
 
 /**
@@ -85,11 +85,13 @@ class Application extends BaseApplication
         }
 
         $this->getQueryBuilder()
-            ->update()
+            ->findAndUpdate()
             ->field('id')->equals($jobId)
             ->field('memoryUsage')->set(memory_get_peak_usage())
             ->field('memoryUsageReal')->set(memory_get_peak_usage(true))
             ->field('stackTrace')->set(serialize($ex ? FlattenException::create($ex) : null))
+            ->getQuery()
+            ->execute();
         ;
     }
 

@@ -22,16 +22,19 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ODM\MongoDB\Mapping\Annotations as ODM;
 use Eo\JobQueueBundle\Exception\InvalidStateTransitionException;
 use Eo\JobQueueBundle\Exception\LogicException;
-use Eo\JobQueueBundle\Document\JobInterface;
-use Symfony\Component\HttpKernel\Exception\FlattenException;
+use Symfony\Component\Debug\Exception\FlattenException;
 
 /**
  * @ODM\Document(repositoryClass = "Eo\JobQueueBundle\Document\Repository\JobRepository")
+ * @ODM\Indexes({
+ *  @ODM\Index(keys={"command"="asc"}),
+ *  @ODM\Index(keys={"state"="asc", "priority"="asc", "id"="asc"})
+ * })
  * @ODM\ChangeTrackingPolicy("DEFERRED_EXPLICIT")
  *
  * @author Eymen Gunay <eymen@egunay.com>
  */
-class Job implements JobInterface
+class Job
 {
     /** State if job is inserted, but not yet ready to be started. */
     const STATE_NEW = 'new';
@@ -72,55 +75,69 @@ class Job implements JobInterface
      */
     const STATE_INCOMPLETE = 'incomplete';
 
+    /**
+     * State if an error occurs in the runner command.
+     *
+     * The runner command is the command that actually launches the individual
+     * jobs. If instead an error occurs in the job command, this will result
+     * in a state of FAILED.
+     */
+    const DEFAULT_QUEUE = 'default';
+    const MAX_QUEUE_LENGTH = 50;
+
+    const PRIORITY_LOW = -5;
+    const PRIORITY_DEFAULT = 0;
+    const PRIORITY_HIGH = 5;
+
     /** @ODM\Id(strategy="auto") */
     protected $id;
 
-    /** @ODM\Field(type="string") */
+    /** @ODM\Field(type = "string") */
     protected $state;
 
-    /** @ODM\Field(type="date") */
+    /** @ODM\Field(type = "string") */
+    private $queue;
+
+    /** @ODM\Field(type = "int") */
+    private $priority = 0;
+
+    /** @ODM\Field(type = "date") */
     protected $createdAt;
 
-    /** @ODM\Field(type="date", nullable = true) */
+    /** @ODM\Field(type = "date", nullable = true) */
     protected $startedAt;
 
-    /** @ODM\Field(type="date", nullable = true) */
+    /** @ODM\Field(type = "date", nullable = true) */
     protected $checkedAt;
 
-    /** @ODM\Field(type="date", nullable = true) */
+    /** @ODM\Field(type = "date", nullable = true) */
     protected $executeAfter;
 
-    /** @ODM\Field(type="int") */
-    protected $interval;
-
-    /** @ODM\Field(type="date", nullable = true) */
-    protected $expiresAt;
-
-    /** @ODM\Field(type="date", nullable = true) */
+    /** @ODM\Field(type = "date", nullable = true) */
     protected $closedAt;
 
-    /** @ODM\Field(type="string") */
+    /** @ODM\Field(type = "string") */
     protected $command;
 
-    /** @ODM\Field(type="hash") */
+    /** @ODM\Field(type = "hash") */
     protected $args;
 
     /** @ODM\ReferenceMany(targetDocument = "Job") */
     protected $dependencies;
 
-    /** @ODM\Field(type="string") */
+    /** @ODM\Field(type = "string") */
     protected $output;
 
-    /** @ODM\Field(type="string") */
+    /** @ODM\Field(type = "string") */
     protected $errorOutput;
 
-    /** @ODM\Field(type="int") */
+    /** @ODM\Field(type = "int") */
     protected $exitCode;
 
-    /** @ODM\Field(type="int") */
+    /** @ODM\Field(type = "int") */
     protected $maxRuntime = 0;
 
-    /** @ODM\Field(type="int") */
+    /** @ODM\Field(type = "int") */
     protected $maxRetries = 0;
 
     /** @ODM\ReferenceOne(targetDocument = "Job", inversedBy = "retryJobs") */
@@ -132,13 +149,13 @@ class Job implements JobInterface
     /** @ODM\Field(type = "hash") */
     protected $stackTrace;
 
-    /** @ODM\Field(type="int") */
+    /** @ODM\Field(type = "int") */
     protected $runtime;
 
-    /** @ODM\Field(type="int") */
+    /** @ODM\Field(type = "int") */
     protected $memoryUsage;
 
-    /** @ODM\Field(type="int") */
+    /** @ODM\Field(type = "int") */
     protected $memoryUsageReal;
 
     /**
@@ -149,9 +166,9 @@ class Job implements JobInterface
      */
     protected $relatedDocuments;
 
-    public static function create($command, array $args = array(), $confirmed = true)
+    public static function create($command, array $args = array(), $confirmed = true, $queue = self::DEFAULT_QUEUE, $priority = self::PRIORITY_DEFAULT)
     {
-        return new self($command, $args, $confirmed);
+        return new self($command, $args, $confirmed, $queue, $priority);
     }
 
     public static function isNonSuccessfulFinalState($state)
@@ -159,11 +176,20 @@ class Job implements JobInterface
         return in_array($state, array(self::STATE_CANCELED, self::STATE_FAILED, self::STATE_INCOMPLETE, self::STATE_TERMINATED), true);
     }
 
-    public function __construct($command, array $args = array(), $confirmed = true)
+    public function __construct($command, array $args = array(), $confirmed = true, $queue = self::DEFAULT_QUEUE, $priority = self::PRIORITY_DEFAULT)
     {
+        if (trim($queue) === '') {
+            throw new \InvalidArgumentException('$queue must not be empty.');
+        }
+        if (strlen($queue) > self::MAX_QUEUE_LENGTH) {
+            throw new \InvalidArgumentException(sprintf('The maximum queue length is %d, but got "%s" (%d chars).', self::MAX_QUEUE_LENGTH, $queue, strlen($queue)));
+        }
+
         $this->command = $command;
         $this->args = $args;
         $this->state = $confirmed ? self::STATE_PENDING : self::STATE_NEW;
+        $this->queue = $queue;
+        $this->priority = $priority * -1;
         $this->createdAt = new \DateTime();
         $this->executeAfter = new \DateTime();
         $this->executeAfter = $this->executeAfter->modify('-1 second');
@@ -186,11 +212,33 @@ class Job implements JobInterface
         $this->runtime = null;
         $this->memoryUsage = null;
         $this->memoryUsageReal = null;
+        $this->relatedDocuments = new ArrayCollection();
     }
 
     public function getId()
     {
         return $this->id;
+    }
+
+    public function getState()
+    {
+        return $this->state;
+    }
+
+    public function getPriority()
+    {
+        return $this->priority * -1;
+    }
+
+    public function isStartable()
+    {
+        foreach ($this->dependencies as $dep) {
+            if ($dep->getState() !== self::STATE_FINISHED) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public function setState($newState)
@@ -247,22 +295,6 @@ class Job implements JobInterface
         $this->state = $newState;
     }
 
-    public function getState()
-    {
-        return $this->state;
-    }
-
-    public function isStartable()
-    {
-        foreach ($this->dependencies as $dep) {
-            if ($dep->getState() !== self::STATE_FINISHED) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
     public function getCreatedAt()
     {
         return $this->createdAt;
@@ -281,27 +313,6 @@ class Job implements JobInterface
     public function setExecuteAfter(\DateTime $executeAfter)
     {
         $this->executeAfter = $executeAfter;
-    }
-
-    public function getInterval()
-    {
-        return $this->interval;
-    }
-
-    public function setInterval($interval)
-    {
-        $this->interval = $interval;
-        return $this;
-    }
-
-    public function getExpiresAt()
-    {
-        return $this->expiresAt;
-    }
-
-    public function setExpiresAt(\DateTime $expiresAt)
-    {
-        $this->expiresAt = $expiresAt;
     }
 
     public function getCommand()
@@ -351,12 +362,12 @@ class Job implements JobInterface
         return $this->dependencies;
     }
 
-    public function hasDependency(JobInterface $job)
+    public function hasDependency(Job $job)
     {
         return $this->dependencies->contains($job);
     }
 
-    public function addDependency(JobInterface $job)
+    public function addDependency(Job $job)
     {
         if ($this->dependencies->contains($job)) {
             return;
@@ -474,7 +485,7 @@ class Job implements JobInterface
         return $this->originalJob;
     }
 
-    public function setOriginalJob(JobInterface $job)
+    public function setOriginalJob(Job $job)
     {
         if (self::STATE_PENDING !== $this->state) {
             throw new \LogicException($this.' must be in state "PENDING".');
@@ -487,7 +498,7 @@ class Job implements JobInterface
         $this->originalJob = $job;
     }
 
-    public function addRetryJob(JobInterface $job)
+    public function addRetryJob(Job $job)
     {
         if (self::STATE_RUNNING !== $this->state) {
             throw new \LogicException('Retry jobs can only be added to running jobs.');
@@ -525,6 +536,11 @@ class Job implements JobInterface
     public function getStackTrace()
     {
         return $this->stackTrace;
+    }
+
+    public function getQueue()
+    {
+        return $this->queue;
     }
 
     public function isNew()
@@ -572,7 +588,7 @@ class Job implements JobInterface
         return sprintf('Job(id = %s, command = "%s")', $this->id, $this->command);
     }
 
-    protected function mightHaveStarted()
+    private function mightHaveStarted()
     {
         if (null === $this->id) {
             return false;

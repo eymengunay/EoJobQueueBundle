@@ -24,12 +24,10 @@ use Doctrine\ODM\MongoDB\DocumentRepository;
 use Doctrine\ORM\Query\ResultSetMappingBuilder;
 use JMS\DiExtraBundle\Annotation as DI;
 use Eo\JobQueueBundle\Document\Job;
-use Eo\JobQueueBundle\Document\JobInterface;
 use Eo\JobQueueBundle\Event\StateChangeEvent;
 use Symfony\Bridge\Doctrine\RegistryInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use DateTime;
-use DateInterval;
 
 class JobRepository extends DocumentRepository
 {
@@ -87,10 +85,12 @@ class JobRepository extends DocumentRepository
         $this->dm->persist($job);
         $this->dm->flush($job);
 
-        $firstJob = $this->dm->createQuery("SELECT j FROM EoJobQueueBundle:Job j WHERE j.command = :command AND j.args = :args ORDER BY j.id ASC")
-             ->setParameter('command', $command)
-             ->setParameter('args', $args, 'json_array')
-             ->setMaxResults(1)
+        $firstJob = $this->createQueryBuilder()
+             ->field('command')->equals($command)
+             ->field('args')->equals($args)
+             ->sort('id', 'asc')
+             ->limit(1)
+             ->getQuery()
              ->getSingleResult();
 
         if ($firstJob === $job) {
@@ -107,9 +107,9 @@ class JobRepository extends DocumentRepository
         return $firstJob;
     }
 
-    public function findStartableJob(array &$excludedIds = array())
+    public function findStartableJob(array &$excludedIds = array(), $excludedQueues = array())
     {
-        while (null !== $job = $this->findPendingJob($excludedIds)) {
+        while (null !== $job = $this->findPendingJob($excludedIds, $excludedQueues)) {
             if ($job->isStartable()) {
                 return $job;
             }
@@ -182,13 +182,16 @@ class JobRepository extends DocumentRepository
                     ->field('id')->notIn(array($excludedIds))
                     ->field('state')->equals(Job::STATE_PENDING)
                     ->field('executeAfter')->lt(new DateTime())
-                    ->sort('createdAt', 'desc')
+                    ->sort(array(
+                        'priority' => 'asc',
+                        'id' =>  'asc'
+                    ))
                     ->limit(1)
                     ->getQuery()
                     ->getSingleResult();
     }
 
-    public function closeJob(JobInterface $job, $finalState)
+    public function closeJob(Job $job, $finalState)
     {
         $visited = array();
         $this->closeJobInternal($job, $finalState, $visited);
@@ -205,7 +208,7 @@ class JobRepository extends DocumentRepository
         }
     }
 
-    private function closeJobInternal(JobInterface $job, $finalState, array &$visited = array())
+    private function closeJobInternal(Job $job, $finalState, array &$visited = array())
     {
         if (in_array($job, $visited, true)) {
             return;
@@ -253,6 +256,8 @@ class JobRepository extends DocumentRepository
                 if ($job->isRetryAllowed()) {
                     $retryJob = new Job($job->getCommand(), $job->getArgs());
                     $retryJob->setMaxRuntime($job->getMaxRuntime());
+                    $retryJob->setExecuteAfter(new \DateTime('+'.(pow(5, count($job->getRetryJobs()))).' seconds'));
+
                     $job->addRetryJob($retryJob);
                     $this->dm->persist($retryJob);
                     $this->dm->persist($job);
@@ -281,12 +286,6 @@ class JobRepository extends DocumentRepository
                 $this->dm->persist($job);
                 $this->dm->flush();
 
-                if (!is_null($job->getInterval())) {
-                    $newJob = clone $job;
-                    $newJob->setExecuteAfter(new DateTime("+" . $job->getInterval() . " seconds"));
-                    $this->dm->persist($newJob);
-                    $this->dm->flush();
-                }
                 return;
 
             default:
@@ -294,12 +293,12 @@ class JobRepository extends DocumentRepository
         }
     }
 
-    public function findIncomingDependencies(JobInterface $job)
+    public function findIncomingDependencies(Job $job)
     {
         return $job->getDependencies();
     }
 
-    public function getIncomingDependencies(JobInterface $job)
+    public function getIncomingDependencies(Job $job)
     {
         return $job->getDependencies();
     }

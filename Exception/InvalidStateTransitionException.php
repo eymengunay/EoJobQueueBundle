@@ -18,7 +18,7 @@
 
 namespace Eo\JobQueueBundle\Exception;
 
-use Eo\JobQueueBundle\Document\JobInterface;
+use Eo\JobQueueBundle\Document\Job;
 
 class InvalidStateTransitionException extends \InvalidArgumentException
 {
@@ -26,7 +26,7 @@ class InvalidStateTransitionException extends \InvalidArgumentException
     private $newState;
     private $allowedStates;
 
-    public function __construct(JobInterface $job, $newState, array $allowedStates = array())
+    public function __construct(Job $job, $newState, array $allowedStates = array())
     {
         $msg = sprintf('The Job(id = %d) cannot change from "%s" to "%s". Allowed transitions: ', $job->getId(), $job->getState(), $newState);
         $msg .= count($allowedStates) > 0 ? '"'.implode('", "', $allowedStates).'"' : '#none#';

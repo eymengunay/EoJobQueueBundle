@@ -19,8 +19,6 @@
 namespace Eo\JobQueueBundle\Event;
 
 use Eo\JobQueueBundle\Document\Job;
-use Eo\JobQueueBundle\Document\JobInterface;
-use Eo\JobQueueBundle\Event\JobEvent;
 
 class NewOutputEvent extends JobEvent
 {
@@ -30,7 +28,7 @@ class NewOutputEvent extends JobEvent
     private $newOutput;
     private $type;
 
-    public function __construct(JobInterface $job, $newOutput, $type = self::TYPE_STDOUT)
+    public function __construct(Job $job, $newOutput, $type = self::TYPE_STDOUT)
     {
         parent::__construct($job);
         $this->newOutput = $newOutput;
