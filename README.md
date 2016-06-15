@@ -21,7 +21,7 @@ Add EoJobQueueBundle in your composer.json:
 
 Now tell composer to download the bundle by running the command:
 ```
-$ php composer.phar update eo/passbook-bundle
+$ php composer.phar update eo/job-queue-bundle
 ```
 Composer will install the bundle to your project's vendor/eo directory.
 
