@@ -35,7 +35,7 @@ public function registerBundles()
 {
     $bundles = array(
         // ...
-        new Eo\EoJobQueueBundle\EoJobQueueBundle(),
+        new Eo\JobQueueBundle\EoJobQueueBundle(),
     );
 }
 ```
