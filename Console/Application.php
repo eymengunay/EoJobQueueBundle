@@ -6,7 +6,6 @@ declare(ticks = 10000000);
 
 use Doctrine\DBAL\Types\Type;
 
-use Eo\JobQueueBundle\Document\JobStatistic;
 use Symfony\Bundle\FrameworkBundle\Console\Application as BaseApplication;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -32,11 +31,6 @@ class Application extends BaseApplication
         $this->getDefinition()->addOption(new InputOption('--eo-job-id', null, InputOption::VALUE_REQUIRED, 'The ID of the Job.'));
 
         $kernel->boot();
-
-        $this->dm = $this->getDocumentManager();
-        if ($kernel->getContainer()->getParameter('eo_job_queue.statistics')) {
-            register_tick_function(array($this, 'onTick'));
-        }
     }
 
     public function doRun(InputInterface $input, OutputInterface $output)
@@ -53,29 +47,6 @@ class Application extends BaseApplication
 
             throw $ex;
         }
-    }
-
-    public function onTick()
-    {
-        if ( ! $this->input->hasOption('eo-job-id') || null === $jobId = $this->input->getOption('eo-job-id')) {
-            return;
-        }
-
-        $characteristics = array(
-            'memory' => memory_get_usage(),
-        );
-
-        foreach ($characteristics as $name => $value) {
-            $stat = new JobStatistic();
-
-            $stat->setJobId($jobId);
-            $stat->setCreatedAt(new \DateTime());
-            $stat->setCharacteristic($name);
-            $stat->setCharValue($value);
-
-            $this->dm->persist($stat);
-        }
-        $this->dm->flush();
     }
 
     private function saveDebugInformation(\Exception $ex = null)
